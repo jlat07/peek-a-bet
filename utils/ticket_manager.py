@@ -1,5 +1,5 @@
 import streamlit as st
-from ticket import Ticket
+from utils.ticket import Ticket
 
 class TicketManager:
     def __init__(self):
