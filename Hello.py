@@ -20,32 +20,49 @@ LOGGER = get_logger(__name__)
 
 def run():
     st.set_page_config(
-        page_title="Hello",
-        page_icon="👋",
+      
     )
 
-    st.write("# Welcome to Streamlit! 👋")
+# Mock data for ticket details
+games = [
+    {"team": "SAINTS", "condition": "OV 43½", "status": "In Progress"},
+    {"team": "STEELERS", "condition": "UN 42½", "status": "win"},
+    {"team": "COMMANDERS", "condition": "+7½", "status": "lose"},
+    {"team": "PATRIOTS", "condition": "OV 47½", "status": "win"},
+    {"team": "BENGALS", "condition": "+5½", "status": "lose"},
+    {"team": "CHARGERS", "condition": "-8½", "status": "win"},
+    {"team": "BEARS", "condition": "OV 46½", "status": "lose"},
+    #... add other games
+]
 
-    st.sidebar.success("Select a demo above.")
+# UI for the ticket
+st.title("Parlay Ticket")
+st.write("##### PF4DF3EAB7A0C")
 
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
-    )
+st.write("## Parlay Card Week 8")
+
+# Iterating over games to display each row
+for game in games:
+    status_color = "gray"
+    border_style = "none"
+    
+    if game["status"] == "win":
+        status_color = "green"
+        border_style = "2px solid white"
+    elif game["status"] == "lose":
+        status_color = "red"
+        border_style = "2px solid white"
+    
+    col1, col2, col3 = st.columns([2,1,1])
+    with col1:
+        st.write(game["team"])
+    with col2:
+        st.write(game["condition"])
+    with col3:
+        st.markdown(f"<div style='background-color: {status_color}; border: {border_style}; padding: 10px;'>{game['status'].capitalize()}</div>", unsafe_allow_html=True)
+
+st.write("#### Ticket Cost: US$5.00")
+st.write("#### To Win: US$370.00")
+st.write("#### To Collect: US$375.00")
 
 
-if __name__ == "__main__":
-    run()
