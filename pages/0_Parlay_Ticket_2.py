@@ -45,7 +45,7 @@ games = [
     {"team": "STEELERS", "condition": "UN 42½", "status": "win"},
     {"team": "COMMANDERS", "condition": "+7½", "status": "lose"},
     {"team": "PATRIOTS", "condition": "OV 47½", "status": "win"},
-    {"team": "BENGALS", "condition": "+5½", "status": "lose"},
+    {"team": "BENGALS", "condition": "+5½", "status": "win"},
     {"team": "CHARGERS", "condition": "-8½", "status": "win"},
     {"team": "BEARS", "condition": "OV 46½", "status": "lose"},
     #... add other games
