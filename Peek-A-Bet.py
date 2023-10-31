@@ -1,47 +1,56 @@
-# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import streamlit as st
-from streamlit.logger import get_logger
+from utils.image_processor import ImageProcessor
+from utils.ticket_manager import TicketManager
+from utils.api_client import APIClient
 
-LOGGER = get_logger(__name__)
+# Initialize classes
+image_processor = ImageProcessor()
+ticket_manager = TicketManager()
+api_client = APIClient()
 
+# Main app interface
+st.title("Peek-A-Bet: Parlay Ticket Checker")
 
-def run():
-    st.set_page_config(
-      
-    )
+# Section for uploading or capturing a ticket
+with st.expander("Add a Parlay Ticket"):
+    uploaded_file = st.file_uploader("Upload your parlay ticket", type=["jpg", "jpeg", "png"])
+    if uploaded_file:
+        ticket_data = image_processor.process_image(uploaded_file)
+        if ticket_data:  # Ensure there's valid data before adding
+            ticket_manager.add_ticket(ticket_data)
+            st.success("Ticket added successfully!")
+        else:
+            st.warning("Unable to process ticket. Please try another image.")
 
-# Text
-st.title("Parlay Ticket Visualizer")
-st.write("#### A Quick and Easy way to check if your bets are winning or not! No more Guessing...")
-         
-st.write("")
-st.write("")
-st.write("#### <--Select the Tickets on the left to see an exmaple")
-st.write("")
-st.write("")
+# Section for displaying all tickets and their status
+with st.expander("Your Tickets", expanded=True):
+    tickets = ticket_manager.get_all_tickets()
+    if not tickets:
+        st.info("You have not added any tickets.")
+    for ticket in tickets:
+        ticket.display()
+        if st.button(f"Delete Ticket {ticket.id}"):
+            ticket_manager.remove_ticket(ticket.id)
+            st.experimental_rerun()  # Refresh the page
 
+# Section for refreshing the game data and calculating results
+with st.expander("Actions"):
+    if st.button("Refresh Game Data"):
+        # Ideally, loop through each ticket and update its game data
+        for ticket in tickets:
+            ticket.refresh_data(api_client)  # This assumes Ticket has a method to update its data
+        st.success("Game data refreshed!")
+    if st.button("Clear All Tickets"):
+        if st.confirm("Are you sure you want to clear all tickets?"):
+            ticket_manager.clear_all_tickets()
+            st.experimental_rerun()
 
+# Display a counter for winning tickets
+winning_tickets = sum(1 for ticket in tickets if ticket.is_winning())  # Assumes Ticket has an `is_winning` method
+st.sidebar.title("Statistics")
+st.sidebar.markdown(f"**Winning Tickets:** {winning_tickets}")
+st.sidebar.markdown(f"**Total Tickets:** {len(tickets)}")
 
+# Additional UI/UX features can be added as per requirements.
 
-
-st.write("######  Also if you can help pick an offical Name..")
-st.write("###### 1. **ParlayRekCheck** - Rekognizing Your Parlay Potential")
-st.write("###### 2. **Parlay Check** - Instantly Verify Your Bets!")
-st.write("###### 3. **Parlay Peek** - A Quick Glance at Your Parlay Status.")
-st.write("##### 4. **Peek-A-Bet** - Sneak a Peek at Your Bet's Progress.")
-st.write("###### 5. **ParlayRekognizer** - Precision in Every Parlay Analysis.")
-st.write("###### 6. **Bet Check** - Where Every Bet Gets Verified.")
-st.write("###### 7. **Bet Rekognizer** - Transforming How You Track Bets.")
+# Running the app will display the UI and allow users to interact with their tickets.
