@@ -53,7 +53,7 @@ games = [
 
 # UI for the ticket
 st.title("Parlay Ticket")
-st.write("##### PF4DF3EAB7A0C")
+st.write("##### QR8JEB7AC7AB")
 
 st.write("## Parlay Card Week 8")
 
