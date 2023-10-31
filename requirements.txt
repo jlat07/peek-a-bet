@@ -4,4 +4,5 @@ pandas
 pydeck
 streamlit
 pytesseract
+tesseract-ocr
 Pillow
