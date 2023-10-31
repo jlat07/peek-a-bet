@@ -3,7 +3,8 @@ from PIL import Image
 
 class ImageProcessor:
     def __init__(self, image_path):
-        self.image_path = image_path
+        # self.image_path = image_path
+        pass
 
 
     def process_image(self, uploaded_file):
