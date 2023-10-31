@@ -23,46 +23,25 @@ def run():
       
     )
 
-# Mock data for ticket details
-games = [
-    {"team": "SAINTS", "condition": "OV 43½", "status": "In Progress"},
-    {"team": "STEELERS", "condition": "UN 42½", "status": "win"},
-    {"team": "COMMANDERS", "condition": "+7½", "status": "win"},
-    {"team": "PATRIOTS", "condition": "OV 47½", "status": "win"},
-    {"team": "BENGALS", "condition": "+5½", "status": "lose"},
-    {"team": "CHARGERS", "condition": "-8½", "status": "lose"},
-    {"team": "BEARS", "condition": "OV 46½", "status": "lose"},
-    #... add other games
-]
-
-# UI for the ticket
-st.title("Parlay Ticket")
-st.write("##### PF4DF3EAB7A0C")
-
-st.write("## Parlay Card Week 8")
-
-# Iterating over games to display each row
-for game in games:
-    status_color = "gray"
-    border_style = "none"
-    
-    if game["status"] == "win":
-        status_color = "green"
-        border_style = "2px solid white"
-    elif game["status"] == "lose":
-        status_color = "red"
-        border_style = "2px solid white"
-    
-    col1, col2, col3 = st.columns([2,1,1])
-    with col1:
-        st.write(game["team"])
-    with col2:
-        st.write(game["condition"])
-    with col3:
-        st.markdown(f"<div style='background-color: {status_color}; border: {border_style}; padding: 10px;'>{game['status'].capitalize()}</div>", unsafe_allow_html=True)
-
-st.write("#### Ticket Cost: US$5.00")
-st.write("#### To Win: US$370.00")
-st.write("#### To Collect: US$375.00")
+# Text
+st.title("Parlay Ticket Visualizer")
+st.write("#### A Quick and Easy way to check if your bets are winning or not! No more Guessing...")
+         
+st.write("")
+st.write("")
+st.write("#### <--Select the Tickets on the left to see an exmaple")
+st.write("")
+st.write("")
 
 
+
+
+
+st.write("######  Also if you can help pick an offical Name..")
+st.write("###### 1. **ParlayRekCheck** - Rekognizing Your Parlay Potential")
+st.write("###### 2. **Parlay Check** - Instantly Verify Your Bets!")
+st.write("###### 3. **Parlay Peek** - A Quick Glance at Your Parlay Status.")
+st.write("##### 4. **Peek-A-Bet** - Sneak a Peek at Your Bet's Progress.")
+st.write("###### 5. **ParlayRekognizer** - Precision in Every Parlay Analysis.")
+st.write("###### 6. **Bet Check** - Where Every Bet Gets Verified.")
+st.write("###### 7. **Bet Rekognizer** - Transforming How You Track Bets.")

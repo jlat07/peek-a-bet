@@ -53,21 +53,23 @@ games = [
 
 # UI for the ticket
 st.title("Parlay Ticket")
-st.write("##### AP4DG8K98")
+st.write("##### PF4DF3EAB7A0C")
 
 st.write("## Parlay Card Week 8")
 
 # Iterating over games to display each row
+all_win = True
 for game in games:
     status_color = "gray"
     border_style = "none"
     
     if game["status"] == "win":
         status_color = "green"
-        border_style = "2px solid white"
+        border_style = "2px solid black"
     elif game["status"] == "lose":
         status_color = "red"
-        border_style = "2px solid white"
+        border_style = "2px solid black"
+        all_win = False
     
     col1, col2, col3 = st.columns([2,1,1])
     with col1:
@@ -78,5 +80,9 @@ for game in games:
         st.markdown(f"<div style='background-color: {status_color}; border: {border_style}; padding: 10px;'>{game['status'].capitalize()}</div>", unsafe_allow_html=True)
 
 st.write("#### Ticket Cost: US$5.00")
-st.write("#### To Win: US$270.00")
-st.write("#### To Collect: US$275.00")
+st.write("#### To Win: US$459.00")
+
+if all_win:
+    st.markdown("#### To Collect: US$445.00 🎉🥳", unsafe_allow_html=True)
+else:
+    st.write("#### To Collect: US$450.00")
