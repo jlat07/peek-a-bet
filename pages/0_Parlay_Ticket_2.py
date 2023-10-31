@@ -78,5 +78,5 @@ for game in games:
         st.markdown(f"<div style='background-color: {status_color}; border: {border_style}; padding: 10px;'>{game['status'].capitalize()}</div>", unsafe_allow_html=True)
 
 st.write("#### Ticket Cost: US$5.00")
-st.write("#### To Win: US$370.00")
-st.write("#### To Collect: US$375.00")
+st.write("#### To Win: US$270.00")
+st.write("#### To Collect: US$275.00")
