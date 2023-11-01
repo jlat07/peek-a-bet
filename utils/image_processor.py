@@ -7,13 +7,17 @@ class ImageProcessor:
 
 
 
-    def process_image_and_extract_text(uploaded_file):
+    def process_image_and_extract_text(self, uploaded_file):
         try:
             # Convert uploaded file to PIL Image
             image = Image.open(uploaded_file)
 
             # Use pytesseract to extract text from the image
             extracted_text = pytesseract.image_to_string(image)
+
+        except Exception as e:
+            print(f"Error processing image: {e}")
+            return None
 
         return extracted_text
             

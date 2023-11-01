@@ -11,12 +11,12 @@ api_client = APIClient()
 # Main app interface
 st.title("Peek-A-Bet: Parlay Ticket Checker")
 
-uploaded_file = st.file_uploader("Upload an image")
+uploaded_image = st.file_uploader("Upload an image")
 
-if uploaded_file:
-    st.image(uploaded_file, caption='Uploaded Image.', use_column_width=True)
+if uploaded_image:
+    st.image(uploaded_image, caption='Uploaded Image.', use_column_width=True)
     st.write("Extracted Text:")
-    extracted_text = process_image_and_extract_text(uploaded_file)
+    extracted_text = image_processor.process_image_and_extract_text(uploaded_image)
     st.text(extracted_text)
 
 # # Section for uploading or capturing a ticket
