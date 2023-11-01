@@ -7,7 +7,7 @@ class ImageProcessor:
 
 
 
-    def process_image_and_extract_text(uploaded_file):
+    def process_image_and_extract_text(self, uploaded_file):
         try:
             # Convert uploaded file to PIL Image
             image = Image.open(uploaded_file)
