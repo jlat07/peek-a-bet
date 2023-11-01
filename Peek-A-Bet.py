@@ -5,13 +5,13 @@ from utils.api_client import APIClient
 
 # Initialize classes
 image_processor = ImageProcessor()
-ticket_manager = TicketManager()
-api_client = APIClient()
+# ticket_manager = TicketManager()
+# api_client = APIClient()
 
 # Main app interface
 st.title("Peek-A-Bet: Parlay Ticket Checker")
 
-uploaded_image = st.file_uploader("Upload an image")
+uploaded_image = st.file_uploader("Upload your parlay ticket", type=None, accept_multiple_files=False)
 
 if uploaded_image:
     st.image(uploaded_image, caption='Uploaded Image.', use_column_width=True)
