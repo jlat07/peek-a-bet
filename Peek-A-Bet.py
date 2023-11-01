@@ -54,10 +54,10 @@ if uploaded_image:
 #             st.experimental_rerun()
 
 # Display a counter for winning tickets
-winning_tickets = sum(1 for ticket in tickets if ticket.is_winning())  # Assumes Ticket has an `is_winning` method
-st.sidebar.title("Statistics")
-st.sidebar.markdown(f"**Winning Tickets:** {winning_tickets}")
-st.sidebar.markdown(f"**Total Tickets:** {len(tickets)}")
+# winning_tickets = sum(1 for ticket in tickets if ticket.is_winning())  # Assumes Ticket has an `is_winning` method
+# st.sidebar.title("Statistics")
+# st.sidebar.markdown(f"**Winning Tickets:** {winning_tickets}")
+# st.sidebar.markdown(f"**Total Tickets:** {len(tickets)}")
 
 # Additional UI/UX features can be added as per requirements.
 
