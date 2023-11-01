@@ -15,6 +15,10 @@ class ImageProcessor:
             # Use pytesseract to extract text from the image
             extracted_text = pytesseract.image_to_string(image)
 
+        except Exception as e:
+            print(f"Error processing image: {e}")
+            return None
+
         return extracted_text
             
     # def process_image(self, uploaded_file):
