@@ -13,9 +13,9 @@ st.title("Peek-A-Bet: Parlay Ticket Checker")
 
 # Section for uploading or capturing a ticket
 with st.expander("Add a Parlay Ticket"):
-    uploaded_file = st.file_uploader("Upload your parlay ticket", type=["jpg", "jpeg", "png"])
-    if uploaded_file:
-        ticket_data = image_processor.process_image(uploaded_file)
+    uploaded_image = st.file_uploader("Upload your parlay ticket", type=["jpg", "jpeg", "png"])
+    if uploaded_image:
+        ticket_data = image_processor.process_image(uploaded_image)
         if ticket_data:  # Ensure there's valid data before adding
             ticket_manager.add_ticket(ticket_data)
             st.success("Ticket added successfully!")
