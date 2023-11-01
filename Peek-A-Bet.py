@@ -5,8 +5,8 @@ from utils.api_client import APIClient
 
 # Initialize classes
 image_processor = ImageProcessor()
-ticket_manager = TicketManager()
-api_client = APIClient()
+# ticket_manager = TicketManager()
+# api_client = APIClient()
 
 # Main app interface
 st.title("Peek-A-Bet: Parlay Ticket Checker")
