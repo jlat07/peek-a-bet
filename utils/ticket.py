@@ -1,13 +1,20 @@
 from utils.api_client import APIClient
 
+class Bet:
+    def __init__(self, team, bet_type, value):
+        self.team = team
+        self.bet_type = bet_type  # 'OV', 'UN', '+', '-'
+        self.value = value
+
 class Ticket:
-    def __init__(self, ticket_id, teams, points, totals):
-        self.ticket_id = ticket_id
-        self.teams = teams
-        self.points = points
-        self.totals = totals
+    def __init__(self, uuid, ticket_number, week, bets):
+        self.uuid = uuid
+        self.ticket_number = ticket_number
+        self.week = week
+        self.bets = bets  # A list of Bet objects
         self.status = "In Progress"
         self.deltas = []
+
 
     def update_status(self, game_data):
     # Assuming game_data is a dictionary containing data about each team's game.
