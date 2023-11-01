@@ -2,10 +2,8 @@ import pytesseract
 from PIL import Image
 
 class ImageProcessor:
-    def __init__(self, image_path):
-        # self.image_path = image_path
-        pass
-
+    def __init__(self, image_path=None):
+        self.image_path = image_path
 
     def process_image(self, uploaded_file):
         try:
