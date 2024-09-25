@@ -123,11 +123,11 @@ def edit_bet_in_draft(idx):
         st.session_state.draft_ticket['bets'][idx] = updated_bet_details
         st.success("Bet updated!")
         st.session_state.editing_bet_index = None
-        st.experimental.rerun()
+        st.rerun()
 
     if st.button("Cancel Edit"):
         st.session_state.editing_bet_index = None
-        st.experimental.rerun()
+        st.rerun()
 
 # UI Elements and Logic
 st.title("Peek-A-Bet")
@@ -157,7 +157,7 @@ if st.session_state.draft_ticket['bets']:
         with col1:
             if st.button("Edit Bet", key=f"edit_{idx}"):
                 st.session_state.editing_bet_index = idx
-                st.experimental.rerun()
+                st.rerun()
         with col2:
             if st.button("Remove Bet", key=f"remove_{idx}"):
                 st.session_state.draft_ticket['matchups'].pop(idx)
@@ -168,7 +168,7 @@ if st.session_state.draft_ticket['bets']:
                         st.session_state.editing_bet_index = None
                     elif st.session_state.editing_bet_index > idx:
                         st.session_state.editing_bet_index -= 1
-                st.experimental.rerun()
+                st.rerun()
 else:
     st.write("No bets in draft ticket.")
 
@@ -198,7 +198,7 @@ if st.session_state.tickets:
         if st.button("Remove Ticket", key=f"remove_ticket_{ticket.ticket_id}"):
             ticket_manager.remove_ticket(ticket.ticket_id)
             st.session_state.tickets = ticket_manager.ordered_tickets()
-            st.experimental.rerun()
+            st.rerun()
 else:
     st.write("No finalized tickets.")
 
