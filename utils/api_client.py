@@ -1,3 +1,4 @@
+import datetime
 import requests
 from utils.data_and_config import (
     USE_MOCK_DATA, API_KEY, BASE_URL, REGIONS, MARKETS, ODDS_FORMAT, DATE_FORMAT
@@ -9,12 +10,35 @@ class APIClient:
         self.base_url = BASE_URL
 
     def get_sports(self):
-        # Existing code remains the same...
-        pass
+        try:
+            response = requests.get(
+                f"{self.base_url}/sports",
+                params={'apiKey': self.api_key}
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data
+        except requests.RequestException as e:
+            raise Exception(f"Error fetching sports: {e}")
 
     def get_odds(self, sport_key='americanfootball_nfl'):
-        # Existing code remains the same...
-        pass
+        try:
+            params = {
+                'apiKey': self.api_key,
+                'regions': REGIONS,
+                'markets': MARKETS,
+                'oddsFormat': ODDS_FORMAT,
+                'dateFormat': DATE_FORMAT,
+            }
+            response = requests.get(
+                f"{self.base_url}/sports/{sport_key}/odds",
+                params=params
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data
+        except requests.RequestException as e:
+            raise Exception(f"Error fetching odds: {e}")
 
     def get_matchups(self):
         if USE_MOCK_DATA:
@@ -55,27 +79,82 @@ class APIClient:
                 }
             return matchups
 
+    def get_matchups(self):
+        if USE_MOCK_DATA:
+            # Updated mock data for matchups with realistic NFL teams
+            mock_matchups = {
+                'Buffalo Bills vs Miami Dolphins': {
+                    'event_id': '1',
+                    'home_team': 'Buffalo Bills',
+                    'away_team': 'Miami Dolphins',
+                    'commence_time': (datetime.utcnow() - datetime.timedelta(hours=1)).isoformat() + 'Z',  # Game started 1 hour ago
+                    'sport_key': 'americanfootball_nfl'
+                },
+                'Kansas City Chiefs vs Denver Broncos': {
+                    'event_id': '2',
+                    'home_team': 'Kansas City Chiefs',
+                    'away_team': 'Denver Broncos',
+                    'commence_time': (datetime.utcnow() - datetime.timedelta(hours=4)).isoformat() + 'Z',  # Game started 4 hours ago
+                    'sport_key': 'americanfootball_nfl'
+                },
+                'Green Bay Packers vs Chicago Bears': {
+                    'event_id': '3',
+                    'home_team': 'Green Bay Packers',
+                    'away_team': 'Chicago Bears',
+                    'commence_time': (datetime.utcnow() + datetime.timedelta(hours=2)).isoformat() + 'Z',  # Game starts in 2 hours
+                    'sport_key': 'americanfootball_nfl'
+                }
+            }
+            return mock_matchups
+        else:
+            # Fetch matchups from the API
+            odds_data = self.get_odds()
+            matchups = {}
+            for event in odds_data:
+                event_id = event['id']
+                home_team = event['home_team']
+                away_team = event['away_team']
+                commence_time = event['commence_time']
+                matchup_key = f"{away_team} vs {home_team}"
+                matchups[matchup_key] = {
+                    'event_id': event_id,
+                    'home_team': home_team,
+                    'away_team': away_team,
+                    'commence_time': commence_time,
+                    'sport_key': event['sport_key']
+                }
+            return matchups
+
     def get_scores(self, sport_key='americanfootball_nfl', days_from=3):
         if USE_MOCK_DATA:
-            # Return mock data for scores
+            # Updated mock data for scores
             mock_scores = {
-                'Team A vs Team B': {
+                'Buffalo Bills vs Miami Dolphins': {
                     'event_id': '1',
-                    'home_team': 'Team B',
-                    'away_team': 'Team A',
-                    'home_score': 21,
-                    'away_score': 28,
-                    'completed': True,
-                    'commence_time': '2023-10-01T18:00:00Z'
-                },
-                'Team C vs Team D': {
-                    'event_id': '2',
-                    'home_team': 'Team D',
-                    'away_team': 'Team C',
-                    'home_score': 14,
-                    'away_score': 14,
+                    'home_team': 'Buffalo Bills',
+                    'away_team': 'Miami Dolphins',
+                    'home_score': 28,
+                    'away_score': 24,
                     'completed': False,
-                    'commence_time': '2023-10-01T21:00:00Z'
+                    'commence_time': (datetime.utcnow() - datetime.timedelta(hours=1)).isoformat() + 'Z'
+                },
+                'Kansas City Chiefs vs Denver Broncos': {
+                    'event_id': '2',
+                    'home_team': 'Kansas City Chiefs',
+                    'away_team': 'Denver Broncos',
+                    'home_score': 35,
+                    'away_score': 14,
+                    'completed': True,
+                    'commence_time': (datetime.utcnow() - datetime.timedelta(hours=4)).isoformat() + 'Z'
+                },
+                'Green Bay Packers vs Chicago Bears': {
+                    'event_id': '3',
+                    'home_team': 'Green Bay Packers',
+                    'away_team': 'Chicago Bears',
+                    'home_score': None,
+                    'away_score': None,
+                    'completed': False,
+                    'commence_time': (datetime.utcnow() + datetime.timedelta(hours=2)).isoformat() + 'Z'
                 }
             }
             return mock_scores
