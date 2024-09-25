@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta, timezone
 import requests
 from utils.data_and_config import (
     USE_MOCK_DATA, API_KEY, BASE_URL, REGIONS, MARKETS, ODDS_FORMAT, DATE_FORMAT
@@ -42,20 +42,26 @@ class APIClient:
 
     def get_matchups(self):
         if USE_MOCK_DATA:
-            # Return mock data for matchups
             mock_matchups = {
-                'Team A vs Team B': {
+                'Buffalo Bills vs Miami Dolphins': {
                     'event_id': '1',
-                    'home_team': 'Team B',
-                    'away_team': 'Team A',
-                    'commence_time': '2023-10-01T18:00:00Z',
+                    'home_team': 'Buffalo Bills',
+                    'away_team': 'Miami Dolphins',
+                    'commence_time': (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat().replace('+00:00', 'Z'),
                     'sport_key': 'americanfootball_nfl'
                 },
-                'Team C vs Team D': {
+                'Kansas City Chiefs vs Denver Broncos': {
                     'event_id': '2',
-                    'home_team': 'Team D',
-                    'away_team': 'Team C',
-                    'commence_time': '2023-10-01T21:00:00Z',
+                    'home_team': 'Kansas City Chiefs',
+                    'away_team': 'Denver Broncos',
+                    'commence_time': (datetime.now(timezone.utc) - timedelta(hours=4)).isoformat().replace('+00:00', 'Z'),
+                    'sport_key': 'americanfootball_nfl'
+                },
+                'Green Bay Packers vs Chicago Bears': {
+                    'event_id': '3',
+                    'home_team': 'Green Bay Packers',
+                    'away_team': 'Chicago Bears',
+                    'commence_time': (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat().replace('+00:00', 'Z'),
                     'sport_key': 'americanfootball_nfl'
                 }
             }
@@ -127,7 +133,6 @@ class APIClient:
 
     def get_scores(self, sport_key='americanfootball_nfl', days_from=3):
         if USE_MOCK_DATA:
-            # Updated mock data for scores
             mock_scores = {
                 'Buffalo Bills vs Miami Dolphins': {
                     'event_id': '1',
@@ -136,7 +141,7 @@ class APIClient:
                     'home_score': 28,
                     'away_score': 24,
                     'completed': False,
-                    'commence_time': (datetime.utcnow() - datetime.timedelta(hours=1)).isoformat() + 'Z'
+                    'commence_time': (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat().replace('+00:00', 'Z')
                 },
                 'Kansas City Chiefs vs Denver Broncos': {
                     'event_id': '2',
@@ -145,7 +150,7 @@ class APIClient:
                     'home_score': 35,
                     'away_score': 14,
                     'completed': True,
-                    'commence_time': (datetime.utcnow() - datetime.timedelta(hours=4)).isoformat() + 'Z'
+                    'commence_time': (datetime.now(timezone.utc) - timedelta(hours=4)).isoformat().replace('+00:00', 'Z')
                 },
                 'Green Bay Packers vs Chicago Bears': {
                     'event_id': '3',
@@ -154,7 +159,7 @@ class APIClient:
                     'home_score': None,
                     'away_score': None,
                     'completed': False,
-                    'commence_time': (datetime.utcnow() + datetime.timedelta(hours=2)).isoformat() + 'Z'
+                    'commence_time': (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat().replace('+00:00', 'Z')
                 }
             }
             return mock_scores
