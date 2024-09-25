@@ -13,7 +13,7 @@ class Ticket:
             raise ValueError("Matchups should not be empty!")
         if not self.bets:
             raise ValueError("Bets should not be empty!")
-        # Add other validation rules if necessary
+        # Additional validation rules can be added here
 
     def compute_outcome(self, game_scores):
         for i, bet in enumerate(self.bets):

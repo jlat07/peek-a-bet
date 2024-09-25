@@ -1,11 +1,9 @@
 import streamlit as st
-from streamlit_autorefresh import st_autorefresh
-from utils.ticket_manager import TicketManager
 from utils.api_client import APIClient
 from utils.data_and_config import bet_types, spread_values, over_under_values
+from utils.ticket import Ticket
 
-# Initialize Ticket Manager and API Client
-ticket_manager = TicketManager()
+# Initialize API Client
 api_client = APIClient()
 
 # Function to Initialize Session State
@@ -17,6 +15,8 @@ def initialize_session_state():
         }
     if 'tickets' not in st.session_state:
         st.session_state.tickets = []
+    if 'ticket_counter' not in st.session_state:
+        st.session_state.ticket_counter = 1
     if 'editing_bet_index' not in st.session_state:
         st.session_state.editing_bet_index = None
     else:
@@ -69,14 +69,17 @@ def add_bet_to_draft(selected_matchup, bet_details):
 def finalize_ticket():
     num_bets = len(st.session_state.draft_ticket['bets'])
     if 3 <= num_bets <= 10:
-        ticket_manager.add_ticket(st.session_state.draft_ticket['matchups'], st.session_state.draft_ticket['bets'])
-        st.session_state.tickets = ticket_manager.ordered_tickets()
+        ticket_id = st.session_state.ticket_counter
+        st.session_state.ticket_counter += 1
+        new_ticket = Ticket(ticket_id, st.session_state.draft_ticket['matchups'], st.session_state.draft_ticket['bets'])
+        new_ticket.validate()
+        st.session_state.tickets.append(new_ticket)
         st.session_state.draft_ticket = {
             'matchups': [],
             'bets': []
         }
         st.session_state.editing_bet_index = None  # Reset editing index
-        st.success("Ticket finalized!")
+        st.success(f"Ticket #{ticket_id} finalized!")
     else:
         st.warning("A ticket requires between 3 to 10 bets.")
 
@@ -94,7 +97,7 @@ def edit_bet_in_draft(idx):
     # Fetch matchups data
     matchups_data = api_client.get_matchups()
 
-    # Matchup Selection (disabled)
+    # Matchup Selection (display only)
     st.markdown(f"**Matchup:** {selected_matchup}")
 
     # Bet Type Selection
@@ -181,7 +184,7 @@ st.info("Note: Finalized tickets cannot be edited. If you need to make changes, 
 # Display Finalized Tickets
 st.subheader("Your Tickets")
 if st.session_state.tickets:
-    for ticket in st.session_state.tickets:
+    for idx, ticket in enumerate(st.session_state.tickets):
         st.markdown(f"### Ticket ID: {ticket.ticket_id}")
         for i, (matchup, bet) in enumerate(zip(ticket.matchups, ticket.bets)):
             bet_info = f"**Bet #{i + 1}:** {matchup} - {bet['type']} {bet['value']}"
@@ -196,8 +199,8 @@ if st.session_state.tickets:
             else:
                 st.write(bet_info)
         if st.button("Remove Ticket", key=f"remove_ticket_{ticket.ticket_id}"):
-            ticket_manager.remove_ticket(ticket.ticket_id)
-            st.session_state.tickets = ticket_manager.ordered_tickets()
+            st.session_state.tickets.pop(idx)
+            st.success(f"Ticket #{ticket.ticket_id} removed.")
             st.rerun()
 else:
     st.write("No finalized tickets.")
@@ -206,7 +209,7 @@ else:
 st.subheader("Update Ticket Statuses")
 if st.button("Check Scores"):
     with st.spinner("Fetching game scores..."):
-        game_scores = api_client.get_scores()  # Fetch scores using the new method
+        game_scores = api_client.get_scores()
         for ticket in st.session_state.tickets:
             ticket.compute_outcome(game_scores)
     st.success("Scores updated!")
