@@ -24,12 +24,7 @@ class Ticket:
             # Extract the corresponding game score
             game_score = game_scores.get(matchup)
             if not game_score:
-                bet["status"] = "pending"
-                continue
-
-            # Check if the game is completed
-            if not game_score['completed']:
-                bet["status"] = "pending"
+                bet["status"] = "Game Not Started"
                 continue
 
             # Get scores
@@ -38,7 +33,12 @@ class Ticket:
             home_score = game_score['home_score']
             away_score = game_score['away_score']
 
-            # Compute outcome
+            # Check if scores are available
+            if home_score is None or away_score is None:
+                bet["status"] = "Game Not Started"
+                continue
+
+            # Compute outcome based on current scores
             if bet_type == "spread":
                 selected_team = bet['team']
                 if selected_team == home_team:
@@ -48,17 +48,47 @@ class Ticket:
                     adjusted_score = away_score + bet_value
                     opponent_score = home_score
                 else:
-                    bet["status"] = "invalid team"
+                    bet["status"] = "Invalid Team"
                     continue
 
-                bet["status"] = "win" if adjusted_score > opponent_score else "lose"
+                bet["delta"] = adjusted_score - opponent_score
+
+                if adjusted_score > opponent_score:
+                    bet["status"] = "Currently Winning"
+                elif adjusted_score < opponent_score:
+                    bet["status"] = "Currently Losing"
+                else:
+                    bet["status"] = "Currently Tied"
+
+                # If the game is completed, set final status
+                if game_score['completed']:
+                    bet["status"] = "Won" if adjusted_score > opponent_score else "Lost"
 
             elif bet_type == "over/under":
                 total_score = home_score + away_score
                 over_under_choice = bet['over_under']
+                bet["delta"] = total_score - bet_value
+
                 if over_under_choice == 'Over':
-                    bet["status"] = "win" if total_score > bet_value else "lose"
+                    if total_score > bet_value:
+                        bet["status"] = "Currently Winning"
+                    elif total_score < bet_value:
+                        bet["status"] = "Currently Losing"
+                    else:
+                        bet["status"] = "Currently Tied"
                 else:
-                    bet["status"] = "win" if total_score < bet_value else "lose"
+                    if total_score < bet_value:
+                        bet["status"] = "Currently Winning"
+                    elif total_score > bet_value:
+                        bet["status"] = "Currently Losing"
+                    else:
+                        bet["status"] = "Currently Tied"
+
+                # If the game is completed, set final status
+                if game_score['completed']:
+                    if over_under_choice == 'Over':
+                        bet["status"] = "Won" if total_score > bet_value else "Lost"
+                    else:
+                        bet["status"] = "Won" if total_score < bet_value else "Lost"
             else:
-                bet["status"] = "pending"
+                bet["status"] = "Invalid Bet Type"
