@@ -3,7 +3,7 @@ from utils.api_client import APIClient
 from utils.data_and_config import bet_types, spread_values, over_under_values
 from utils.ticket import Ticket
 
-THEME_COLOR = "#556B2F"  # Neon green color for the theme
+THEME_COLOR = "#3CB371"  # Neon green color for the theme
 
 # Set page configuration for dark theme
 st.set_page_config(page_title="Peek-A-Bet", page_icon="🎲", layout="wide", initial_sidebar_state="expanded")
