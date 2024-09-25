@@ -1,20 +1,19 @@
-import os
-import streamlit as st
+from utils.ticket import Ticket
 
-# Settings
-USE_MOCK_DATA = False  # Set to False to use live API data
+class TicketManager:
+    def __init__(self):
+        self.tickets = {}
+        self.ticket_order = []
 
-# Fetch API credentials from Streamlit secrets or environment variables
-API_KEY = st.secrets.get("API_KEY") or os.getenv('API_KEY')
-BASE_URL = 'https://api.the-odds-api.com/v4'  # Updated base URL
+    def add_ticket(self, matchups, bets):
+        ticket_id = len(self.tickets) + 1
+        new_ticket = Ticket(ticket_id, matchups, bets)
+        new_ticket.validate()
+        self.tickets[ticket_id] = new_ticket
+        self.ticket_order.append(ticket_id)
 
-# API Configuration
-REGIONS = 'us'  # Regions to get odds from
-MARKETS = 'h2h,spreads,totals'  # Types of bets
-ODDS_FORMAT = 'american'  # 'decimal' or 'american'
-DATE_FORMAT = 'iso'  # 'iso' or 'unix'
+    def get_ticket(self, ticket_id):
+        return self.tickets.get(ticket_id)
 
-# Bet Configurations
-bet_types = ['Spread', 'Over/Under']
-spread_values = [float(x) for x in range(-20, 21)]  # Including zero
-over_under_values = [float(x) for x in range(30, 71)]  # Over/Under values from 30 to 70
+    def ordered_tickets(self):
+        return [self.tickets[ticket_id] for ticket_id in self.ticket_order]
