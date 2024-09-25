@@ -1,7 +1,9 @@
 import streamlit as st
 from utils.api_client import APIClient
-from utils.data_and_config import bet_types, spread_values, over_under_values, THEME_COLOR
+from utils.data_and_config import bet_types, spread_values, over_under_values
 from utils.ticket import Ticket
+
+THEME_COLOR = "#39FF14"  # Neon green color for the theme
 
 # Set page configuration for dark theme
 st.set_page_config(page_title="Peek-A-Bet", page_icon="🎲", layout="wide", initial_sidebar_state="expanded")
