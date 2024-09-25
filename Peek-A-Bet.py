@@ -69,26 +69,84 @@ def finalize_ticket():
     else:
         st.warning("A ticket requires between 3 to 10 bets.")
 
+# Function to Edit Bet in Draft Ticket
+def edit_bet_in_draft(idx):
+    st.write(f"Editing Bet #{idx + 1}")
+    selected_matchup = st.session_state.draft_ticket['matchups'][idx]
+    bet_details = st.session_state.draft_ticket['bets'][idx]
+
+    # Fetch matchups data
+    matchups_data = api_client.get_matchups()
+
+    # Matchup Selection (disabled)
+    st.markdown(f"**Matchup:** {selected_matchup}")
+
+    # Bet Type Selection
+    selected_bet_type = st.selectbox('Bet Type', bet_types, index=bet_types.index(bet_details['type']))
+
+    updated_bet_details = {'type': selected_bet_type}
+
+    if selected_bet_type == 'Spread':
+        selected_team = st.selectbox('Select Team', [
+            matchups_data[selected_matchup]['home_team'],
+            matchups_data[selected_matchup]['away_team']
+        ], index=[
+            matchups_data[selected_matchup]['home_team'],
+            matchups_data[selected_matchup]['away_team']
+        ].index(bet_details['team']))
+        selected_value = st.selectbox('Select Spread', spread_values, index=spread_values.index(float(bet_details['value'])))
+        updated_bet_details['value'] = selected_value
+        updated_bet_details['team'] = selected_team
+    else:
+        over_under_choice = st.selectbox('Over or Under', ['Over', 'Under'], index=['Over', 'Under'].index(bet_details['over_under']))
+        selected_value = st.selectbox('Select Over/Under Value', over_under_values, index=over_under_values.index(float(bet_details['value'])))
+        updated_bet_details['value'] = selected_value
+        updated_bet_details['over_under'] = over_under_choice
+
+    if st.button("Update Bet"):
+        st.session_state.draft_ticket['bets'][idx] = updated_bet_details
+        st.success("Bet updated!")
+        st.session_state.editing_bet_index = None
+        st.experimental_rerun()
+
+    if st.button("Cancel Edit"):
+        st.session_state.editing_bet_index = None
+        st.experimental_rerun()
+
 # UI Elements and Logic
 st.title("Peek-A-Bet")
 
-selected_matchup, bet_details = get_user_input()
+# Initialize editing state
+if 'editing_bet_index' not in st.session_state:
+    st.session_state.editing_bet_index = None
 
-# Add Bet Button
-if st.button("Add Bet"):
-    if selected_matchup and bet_details:
-        add_bet_to_draft(selected_matchup, bet_details)
-        st.success("Bet added to draft ticket!")
+if st.session_state.editing_bet_index is not None:
+    # Editing a bet
+    edit_bet_in_draft(st.session_state.editing_bet_index)
+else:
+    selected_matchup, bet_details = get_user_input()
+
+    # Add Bet Button
+    if st.button("Add Bet"):
+        if selected_matchup and bet_details:
+            add_bet_to_draft(selected_matchup, bet_details)
+            st.success("Bet added to draft ticket!")
 
 # Display Draft Ticket
 st.subheader("Draft Ticket")
 if st.session_state.draft_ticket['bets']:
     for idx, (matchup, bet) in enumerate(zip(st.session_state.draft_ticket['matchups'], st.session_state.draft_ticket['bets'])):
-        st.write(f"{matchup} - {bet['type']} {bet['value']}")
-        if st.button("Remove Bet", key=f"remove_{idx}"):
-            st.session_state.draft_ticket['matchups'].pop(idx)
-            st.session_state.draft_ticket['bets'].pop(idx)
-            st.experimental_rerun()
+        st.write(f"**Bet #{idx + 1}:** {matchup} - {bet['type']} {bet['value']}")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Edit Bet", key=f"edit_{idx}"):
+                st.session_state.editing_bet_index = idx
+                st.experimental_rerun()
+        with col2:
+            if st.button("Remove Bet", key=f"remove_{idx}"):
+                st.session_state.draft_ticket['matchups'].pop(idx)
+                st.session_state.draft_ticket['bets'].pop(idx)
+                st.experimental_rerun()
 else:
     st.write("No bets in draft ticket.")
 
@@ -96,13 +154,29 @@ else:
 if st.button("Finalize Ticket"):
     finalize_ticket()
 
+st.info("Note: Finalized tickets cannot be edited. If you need to make changes, please remove the ticket and create a new one.")
+
 # Display Finalized Tickets
 st.subheader("Your Tickets")
 if st.session_state.tickets:
     for ticket in st.session_state.tickets:
         st.markdown(f"### Ticket ID: {ticket.ticket_id}")
-        for matchup, bet in zip(ticket.matchups, ticket.bets):
-            st.write(f"{matchup} - {bet['type']} {bet['value']}")
+        for i, (matchup, bet) in enumerate(zip(ticket.matchups, ticket.bets)):
+            bet_info = f"**Bet #{i + 1}:** {matchup} - {bet['type']} {bet['value']}"
+            bet_status = bet.get('status')
+            if bet_status:
+                status_color = 'green' if bet_status == 'win' else 'red' if bet_status == 'lose' else 'gray'
+                bet_info += f" - {bet_status.capitalize()}"
+                st.markdown(
+                    f"<div style='background-color: {status_color}; padding: 10px;'>{bet_info}</div>",
+                    unsafe_allow_html=True
+                )
+            else:
+                st.write(bet_info)
+        if st.button("Remove Ticket", key=f"remove_ticket_{ticket.ticket_id}"):
+            ticket_manager.remove_ticket(ticket.ticket_id)
+            st.session_state.tickets = ticket_manager.ordered_tickets()
+            st.experimental_rerun()
 else:
     st.write("No finalized tickets.")
 
@@ -118,10 +192,11 @@ if st.button("Check Scores"):
     # Display tickets with updated bet statuses
     for ticket in st.session_state.tickets:
         st.markdown(f"### Ticket ID: {ticket.ticket_id}")
-        for matchup, bet in zip(ticket.matchups, ticket.bets):
+        for i, (matchup, bet) in enumerate(zip(ticket.matchups, ticket.bets)):
             bet_status = bet.get('status', 'pending')
             status_color = 'green' if bet_status == 'win' else 'red' if bet_status == 'lose' else 'gray'
+            bet_info = f"**Bet #{i + 1}:** {matchup} - {bet['type']} {bet['value']} - {bet_status.capitalize()}"
             st.markdown(
-                f"<div style='background-color: {status_color}; padding: 10px;'>{matchup} - {bet['type']} {bet['value']} - {bet_status.capitalize()}</div>",
+                f"<div style='background-color: {status_color}; padding: 10px;'>{bet_info}</div>",
                 unsafe_allow_html=True
             )
