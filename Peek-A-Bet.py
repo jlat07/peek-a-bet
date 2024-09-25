@@ -8,15 +8,25 @@ from utils.data_and_config import bet_types, spread_values, over_under_values
 ticket_manager = TicketManager()
 api_client = APIClient()
 
-# Setup Session State
-if 'draft_ticket' not in st.session_state:
-    st.session_state.draft_ticket = {
-        'matchups': [],
-        'bets': []
-    }
+# Function to Initialize Session State
+def initialize_session_state():
+    if 'draft_ticket' not in st.session_state:
+        st.session_state.draft_ticket = {
+            'matchups': [],
+            'bets': []
+        }
+    if 'tickets' not in st.session_state:
+        st.session_state.tickets = []
+    if 'editing_bet_index' not in st.session_state:
+        st.session_state.editing_bet_index = None
+    else:
+        # Validate editing_bet_index
+        idx = st.session_state.editing_bet_index
+        if idx is not None and idx >= len(st.session_state.draft_ticket['bets']):
+            st.session_state.editing_bet_index = None
 
-if 'tickets' not in st.session_state:
-    st.session_state.tickets = []
+# Call the initialization function
+initialize_session_state()
 
 # User Input Function
 def get_user_input():
@@ -65,12 +75,18 @@ def finalize_ticket():
             'matchups': [],
             'bets': []
         }
+        st.session_state.editing_bet_index = None  # Reset editing index
         st.success("Ticket finalized!")
     else:
         st.warning("A ticket requires between 3 to 10 bets.")
 
 # Function to Edit Bet in Draft Ticket
 def edit_bet_in_draft(idx):
+    if idx is None or idx >= len(st.session_state.draft_ticket['matchups']):
+        st.error("Invalid bet index. Unable to edit bet.")
+        st.session_state.editing_bet_index = None
+        return
+
     st.write(f"Editing Bet #{idx + 1}")
     selected_matchup = st.session_state.draft_ticket['matchups'][idx]
     bet_details = st.session_state.draft_ticket['bets'][idx]
@@ -116,13 +132,13 @@ def edit_bet_in_draft(idx):
 # UI Elements and Logic
 st.title("Peek-A-Bet")
 
-# Initialize editing state
-if 'editing_bet_index' not in st.session_state:
-    st.session_state.editing_bet_index = None
-
 if st.session_state.editing_bet_index is not None:
-    # Editing a bet
-    edit_bet_in_draft(st.session_state.editing_bet_index)
+    idx = st.session_state.editing_bet_index
+    if idx < len(st.session_state.draft_ticket['bets']):
+        edit_bet_in_draft(idx)
+    else:
+        st.session_state.editing_bet_index = None
+        st.warning("The bet you're trying to edit no longer exists.")
 else:
     selected_matchup, bet_details = get_user_input()
 
@@ -146,6 +162,12 @@ if st.session_state.draft_ticket['bets']:
             if st.button("Remove Bet", key=f"remove_{idx}"):
                 st.session_state.draft_ticket['matchups'].pop(idx)
                 st.session_state.draft_ticket['bets'].pop(idx)
+                # Adjust editing_bet_index if necessary
+                if st.session_state.editing_bet_index is not None:
+                    if st.session_state.editing_bet_index == idx:
+                        st.session_state.editing_bet_index = None
+                    elif st.session_state.editing_bet_index > idx:
+                        st.session_state.editing_bet_index -= 1
                 st.experimental.rerun()
 else:
     st.write("No bets in draft ticket.")
