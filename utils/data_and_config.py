@@ -2,7 +2,7 @@ import os
 import streamlit as st
 
 # Settings
-USE_MOCK_DATA = False  # Set to False to use live API data
+USE_MOCK_DATA = True  # Set to True to use mock data; False to use live API data
 
 # Fetch API credentials from Streamlit secrets or environment variables
 API_KEY = st.secrets.get("API_KEY") or os.getenv('API_KEY')
