@@ -1,72 +1,64 @@
-from utils.api_client import APIClient
-
-class Bet:
-    def __init__(self, team, bet_type, value):
-        self.team = team
-        self.bet_type = bet_type  # 'OV', 'UN', '+', '-'
-        self.value = value
-
 class Ticket:
-    def __init__(self, uuid, ticket_number, week, bets):
-        self.uuid = uuid
-        self.ticket_number = ticket_number
-        self.week = week
-        self.bets = bets  # A list of Bet objects
-        self.status = "In Progress"
-        self.deltas = []
-
-
-    def update_status(self, game_data):
-    # Assuming game_data is a dictionary containing data about each team's game.
-    
-        for i, team in enumerate(self.teams):
-            current_score = game_data[team]['score']
-            opponent_score = game_data[team]['opponent_score']
-            
-            adjusted_score = current_score + self.points[i]
-            
-            if adjusted_score > opponent_score:
-                self.status = "Winning"
-            else:
-                self.status = "Losing"
-            
-            if game_data[team]['final']:
-                self.status = "Final"
-        
-            # Calculate deltas for the team
-            team_delta = adjusted_score - opponent_score
-            self.deltas.append({'team': team, 'delta': team_delta})
-            
-            # Calculate deltas for over/under
-            total_score = current_score + opponent_score
-            total_delta = total_score - self.totals[i]
-            self.deltas.append({'team': team, 'over_under_delta': total_delta})
-
+    def __init__(self, ticket_id, matchups, bets):
+        self.ticket_id = ticket_id
+        self.matchups = matchups  # List of matchup strings
+        self.bets = bets          # List of bet dictionaries
 
     def display(self):
-        # This method would typically return a formatted string or data structure for Streamlit display.
-        display_data = {
-            'ticket_id': self.ticket_id,
-            'teams': self.teams,
-            'points': self.points,
-            'totals': self.totals,
-            'status': self.status,
-            'deltas': self.deltas
-        }
-        return display_data
+        bet_str = ', '.join([f"{bet['type']} {bet['value']}" for bet in self.bets])
+        return f"Ticket ID: {self.ticket_id}\nMatchups: {', '.join(self.matchups)}\nBets: {bet_str}"
 
+    def validate(self):
+        if not self.matchups:
+            raise ValueError("Matchups should not be empty!")
+        if not self.bets:
+            raise ValueError("Bets should not be empty!")
+        # Add other validation rules if necessary
 
-    def check_status(self):
-        api_client = APIClient()
+    def compute_outcome(self, game_scores):
+        for i, bet in enumerate(self.bets):
+            bet_type = bet["type"].lower()
+            bet_value = float(bet["value"])
+            matchup = self.matchups[i]
 
-        # Get live game data for teams on the ticket
-        game_data = api_client.get_live_game_data(self.team_name)
-        
-        # Based on the game_data, determine the status of the ticket
-        # For example:
-        if game_data["current_score"] + self.bet_points > game_data["opponent_score"]:
-            # The team is currently winning when considering the bet points
-            self.status = "Winning"
-        else:
-            self.status = "Losing"
-        #... Other logic based on the game data and ticket data
+            # Extract the corresponding game score
+            game_score = game_scores.get(matchup)
+            if not game_score:
+                bet["status"] = "pending"
+                continue
+
+            # Check if the game is completed
+            if not game_score['completed']:
+                bet["status"] = "pending"
+                continue
+
+            # Get scores
+            home_team = game_score['home_team']
+            away_team = game_score['away_team']
+            home_score = game_score['home_score']
+            away_score = game_score['away_score']
+
+            # Compute outcome
+            if bet_type == "spread":
+                selected_team = bet['team']
+                if selected_team == home_team:
+                    adjusted_score = home_score + bet_value
+                    opponent_score = away_score
+                elif selected_team == away_team:
+                    adjusted_score = away_score + bet_value
+                    opponent_score = home_score
+                else:
+                    bet["status"] = "invalid team"
+                    continue
+
+                bet["status"] = "win" if adjusted_score > opponent_score else "lose"
+
+            elif bet_type == "over/under":
+                total_score = home_score + away_score
+                over_under_choice = bet['over_under']
+                if over_under_choice == 'Over':
+                    bet["status"] = "win" if total_score > bet_value else "lose"
+                else:
+                    bet["status"] = "win" if total_score < bet_value else "lose"
+            else:
+                bet["status"] = "pending"

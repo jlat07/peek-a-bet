@@ -1,64 +1,127 @@
 import streamlit as st
-from utils.image_processor import ImageProcessor
+from streamlit_autorefresh import st_autorefresh
 from utils.ticket_manager import TicketManager
 from utils.api_client import APIClient
+from utils.data_and_config import bet_types, spread_values, over_under_values
 
-# Initialize classes
-image_processor = ImageProcessor()
-# ticket_manager = TicketManager()
-# api_client = APIClient()
+# Initialize Ticket Manager and API Client
+ticket_manager = TicketManager()
+api_client = APIClient()
 
-# Main app interface
-st.title("Peek-A-Bet: Parlay Ticket Checker")
+# Setup Session State
+if 'draft_ticket' not in st.session_state:
+    st.session_state.draft_ticket = {
+        'matchups': [],
+        'bets': []
+    }
 
-uploaded_image = st.file_uploader("Upload your parlay ticket", type=None, accept_multiple_files=False)
+if 'tickets' not in st.session_state:
+    st.session_state.tickets = []
 
-if uploaded_image:
-    st.image(uploaded_image, caption='Uploaded Image.', use_column_width=True)
-    st.write("Extracted Text:")
-    extracted_text = image_processor.process_image_and_extract_text(uploaded_image)
-    st.text(extracted_text)
+# User Input Function
+def get_user_input():
+    # Fetch available matchups dynamically
+    with st.spinner("Fetching matchups..."):
+        matchups_data = api_client.get_matchups()
+    matchup_options = list(matchups_data.keys())
 
-# # Section for uploading or capturing a ticket
-# with st.expander("Add a Parlay Ticket"):
-#     uploaded_image = st.file_uploader("Upload your parlay ticket", type=["jpg", "jpeg", "png"])
-#     if uploaded_image:
-#         ticket_data = image_processor.process_image(uploaded_image)
-#         if ticket_data:  # Ensure there's valid data before adding
-#             ticket_manager.add_ticket(ticket_data)
-#             st.success("Ticket added successfully!")
-#         else:
-#             st.warning("Unable to process ticket. Please try another image.")
+    if not matchup_options:
+        st.error("No matchups available at the moment.")
+        return None, None
 
-# # Section for displaying all tickets and their status
-# with st.expander("Your Tickets", expanded=True):
-#     tickets = ticket_manager.get_all_tickets()
-#     if not tickets:
-#         st.info("You have not added any tickets.")
-#     for ticket in tickets:
-#         ticket.display()
-#         if st.button(f"Delete Ticket {ticket.id}"):
-#             ticket_manager.remove_ticket(ticket.id)
-#             st.experimental_rerun()  # Refresh the page
+    selected_matchup = st.selectbox('Select Matchup', matchup_options)
+    selected_bet_type = st.selectbox('Bet Type', bet_types)
 
-# # Section for refreshing the game data and calculating results
-# with st.expander("Actions"):
-#     if st.button("Refresh Game Data"):
-#         # Ideally, loop through each ticket and update its game data
-#         for ticket in tickets:
-#             ticket.refresh_data(api_client)  # This assumes Ticket has a method to update its data
-#         st.success("Game data refreshed!")
-#     if st.button("Clear All Tickets"):
-#         if st.confirm("Are you sure you want to clear all tickets?"):
-#             ticket_manager.clear_all_tickets()
-#             st.experimental_rerun()
+    bet_details = {'type': selected_bet_type}
 
-# Display a counter for winning tickets
-# winning_tickets = sum(1 for ticket in tickets if ticket.is_winning())  # Assumes Ticket has an `is_winning` method
-# st.sidebar.title("Statistics")
-# st.sidebar.markdown(f"**Winning Tickets:** {winning_tickets}")
-# st.sidebar.markdown(f"**Total Tickets:** {len(tickets)}")
+    if selected_bet_type == 'Spread':
+        selected_team = st.selectbox('Select Team', [
+            matchups_data[selected_matchup]['home_team'],
+            matchups_data[selected_matchup]['away_team']
+        ])
+        selected_value = st.selectbox('Select Spread', spread_values)
+        bet_details['value'] = selected_value
+        bet_details['team'] = selected_team
+    else:
+        over_under_choice = st.selectbox('Over or Under', ['Over', 'Under'])
+        selected_value = st.selectbox('Select Over/Under Value', over_under_values)
+        bet_details['value'] = selected_value
+        bet_details['over_under'] = over_under_choice
 
-# Additional UI/UX features can be added as per requirements.
+    return selected_matchup, bet_details
 
-# Running the app will display the UI and allow users to interact with their tickets.
+# Function to Add Bet to Draft
+def add_bet_to_draft(selected_matchup, bet_details):
+    st.session_state.draft_ticket['matchups'].append(selected_matchup)
+    st.session_state.draft_ticket['bets'].append(bet_details)
+
+# Function to Finalize a Ticket
+def finalize_ticket():
+    num_bets = len(st.session_state.draft_ticket['bets'])
+    if 3 <= num_bets <= 10:
+        ticket_manager.add_ticket(st.session_state.draft_ticket['matchups'], st.session_state.draft_ticket['bets'])
+        st.session_state.tickets = ticket_manager.ordered_tickets()
+        st.session_state.draft_ticket = {
+            'matchups': [],
+            'bets': []
+        }
+        st.success("Ticket finalized!")
+    else:
+        st.warning("A ticket requires between 3 to 10 bets.")
+
+# UI Elements and Logic
+st.title("Peek-A-Bet")
+
+selected_matchup, bet_details = get_user_input()
+
+# Add Bet Button
+if st.button("Add Bet"):
+    if selected_matchup and bet_details:
+        add_bet_to_draft(selected_matchup, bet_details)
+        st.success("Bet added to draft ticket!")
+
+# Display Draft Ticket
+st.subheader("Draft Ticket")
+if st.session_state.draft_ticket['bets']:
+    for idx, (matchup, bet) in enumerate(zip(st.session_state.draft_ticket['matchups'], st.session_state.draft_ticket['bets'])):
+        st.write(f"{matchup} - {bet['type']} {bet['value']}")
+        if st.button("Remove Bet", key=f"remove_{idx}"):
+            st.session_state.draft_ticket['matchups'].pop(idx)
+            st.session_state.draft_ticket['bets'].pop(idx)
+            st.experimental_rerun()
+else:
+    st.write("No bets in draft ticket.")
+
+# Finalize Ticket Button
+if st.button("Finalize Ticket"):
+    finalize_ticket()
+
+# Display Finalized Tickets
+st.subheader("Your Tickets")
+if st.session_state.tickets:
+    for ticket in st.session_state.tickets:
+        st.markdown(f"### Ticket ID: {ticket.ticket_id}")
+        for matchup, bet in zip(ticket.matchups, ticket.bets):
+            st.write(f"{matchup} - {bet['type']} {bet['value']}")
+else:
+    st.write("No finalized tickets.")
+
+# Check Scores and Update Bet Statuses
+st.subheader("Update Ticket Statuses")
+if st.button("Check Scores"):
+    with st.spinner("Fetching game scores..."):
+        game_scores = api_client.get_scores()  # Fetch scores using the new method
+        for ticket in st.session_state.tickets:
+            ticket.compute_outcome(game_scores)
+    st.success("Scores updated!")
+
+    # Display tickets with updated bet statuses
+    for ticket in st.session_state.tickets:
+        st.markdown(f"### Ticket ID: {ticket.ticket_id}")
+        for matchup, bet in zip(ticket.matchups, ticket.bets):
+            bet_status = bet.get('status', 'pending')
+            status_color = 'green' if bet_status == 'win' else 'red' if bet_status == 'lose' else 'gray'
+            st.markdown(
+                f"<div style='background-color: {status_color}; padding: 10px;'>{matchup} - {bet['type']} {bet['value']} - {bet_status.capitalize()}</div>",
+                unsafe_allow_html=True
+            )
