@@ -229,6 +229,19 @@ if st.session_state.tickets:
             else:
                 delta_display = ""
 
+            # Additional info for bets
+            if home_score is not None and away_score is not None:
+                if bet['type'] == 'Over/Under':
+                    total_score = home_score + away_score
+                    extra_info = f"Total Score: {total_score}, Over/Under: {bet['value']}"
+                elif bet['type'] == 'Spread':
+                    selected_team = bet.get('team')
+                    extra_info = f"Selected Team: {selected_team}, Spread: {bet['value']}"
+                else:
+                    extra_info = ""
+            else:
+                extra_info = ""
+
             # Prepare status icon and color
             if bet_status in ["Currently Winning", "Won"]:
                 status_icon = "✅"
@@ -243,20 +256,21 @@ if st.session_state.tickets:
                 status_icon = "⏳"
                 status_color = "#888888"
 
-            # Combine all info
+            # Combine all info in the desired order
             bet_info_full = f"""
             <div style='border: 1px solid #444; padding: 10px; margin-bottom: 5px; background-color: #2e2e2e;'>
                 <span style='color: {status_color}; font-size: 20px;'>{status_icon}</span>
                 {bet_info}<br>
-                <strong>Status:</strong> {bet_status}<br>
                 <strong>Score:</strong> {score_display}<br>
-                <strong>{delta_display}</strong>
+                <strong>{extra_info}</strong><br>
+                <strong>{delta_display}</strong><br>
+                <strong>Status:</strong> {bet_status}
             </div>
             """
             st.markdown(bet_info_full, unsafe_allow_html=True)
         if st.button("Remove Ticket", key=f"remove_ticket_{ticket.ticket_id}"):
             st.session_state.tickets.pop(idx)
-            st.success(f"Ticket #{ticket.ticket_id} removed.")
+            st.success(f"Ticket {ticket.ticket_id} removed.")
             st.rerun()
 else:
     st.write("No finalized tickets.")
