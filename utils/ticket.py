@@ -1,3 +1,5 @@
+# utils/ticket.py
+
 class Ticket:
     def __init__(self, ticket_id, matchups, bets):
         self.ticket_id = ticket_id
@@ -66,10 +68,10 @@ class Ticket:
 
             elif bet_type == "over/under":
                 total_score = home_score + away_score
-                over_under_choice = bet['over_under']
+                over_under_choice = bet['over_under'].lower()
                 bet["delta"] = total_score - bet_value
 
-                if over_under_choice == 'Over':
+                if over_under_choice == 'over':
                     if total_score > bet_value:
                         bet["status"] = "Currently Winning"
                     elif total_score < bet_value:
@@ -86,7 +88,7 @@ class Ticket:
 
                 # If the game is completed, set final status
                 if game_score['completed']:
-                    if over_under_choice == 'Over':
+                    if over_under_choice == 'over':
                         bet["status"] = "Won" if total_score > bet_value else "Lost"
                     else:
                         bet["status"] = "Won" if total_score < bet_value else "Lost"
