@@ -6,7 +6,7 @@ from utils.ticket import Ticket
 THEME_COLOR = "#228B22"  # Foreat Green color for the theme
 
 # Set page configuration for dark theme
-st.set_page_config(page_title="Peek-A-Bet-TEST", page_icon="🎲", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Peek-A-Bet", page_icon="🎲", layout="wide", initial_sidebar_state="expanded")
 
 # Apply custom CSS for dark theme and neon colors
 st.markdown(f"""
