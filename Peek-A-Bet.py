@@ -5,6 +5,7 @@ from utils.auth import auth
 # Authenticate user
 user = auth.authenticate()
 
+
 if user:
     st.write(f"Welcome {user['email']}!")
     THEME_COLOR = "#228B22"  # Foreat Green color for the theme
