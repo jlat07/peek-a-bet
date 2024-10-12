@@ -1,6 +1,6 @@
 import streamlit as st
 from utils.api_client import APIClient
-from utils.auth import auth  # Import auth from auth.py
+from utils.auth import auth
 
 # Authenticate user
 user = auth.authenticate()
