@@ -1,16 +1,26 @@
 import streamlit as st
 from utils.api_client import APIClient
-from utils.auth import authenticate, logout  # Import authenticate and logout from auth.py
+from utils.ticket import Ticket
+from utils.auth import authenticate, logout
 
-# Authenticate user
+# Set page configuration for dark theme
+st.set_page_config(page_title="Peek-A-Bet", page_icon="🎟️", layout="wide")
+
+# Initialize authentication
 session = authenticate()
 
-if session:
-    st.write(f"Welcome {session['user']['email']}!")
+# If not logged in, show login form
+if not session:
+    st.warning("Please log in to access the app.")
+else:
+    # User is logged in, display the main app content
+    st.success(f"Welcome, {session['user']['email']}!")
+    
+    # Logout button in the sidebar
+    logout()
+    
+    # Main app logic after login goes here...
     THEME_COLOR = "#228B22"  # Forest Green color for the theme
-
-    # Set page configuration for dark theme
-    st.set_page_config(page_title="Peek-A-Bet", page_icon="🎲", layout="wide", initial_sidebar_state="expanded")
 
     # Apply custom CSS for dark theme and neon colors
     st.markdown(f"""
@@ -288,8 +298,3 @@ if session:
             for ticket in st.session_state.tickets:
                 ticket.compute_outcome(game_scores)
         st.success("Scores and statuses updated!")
-
-    # Add logout button
-    logout()
-else:
-    st.write("Please log in to access the app.")
