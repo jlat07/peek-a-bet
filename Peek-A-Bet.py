@@ -1,14 +1,13 @@
 import streamlit as st
 from utils.api_client import APIClient
-from utils.auth import auth
+from utils.auth import authenticate, logout  # Import authenticate and logout from auth.py
 
 # Authenticate user
-user = auth.authenticate()
+session = authenticate()
 
-
-if user:
-    st.write(f"Welcome {user['email']}!")
-    THEME_COLOR = "#228B22"  # Foreat Green color for the theme
+if session:
+    st.write(f"Welcome {session['user']['email']}!")
+    THEME_COLOR = "#228B22"  # Forest Green color for the theme
 
     # Set page configuration for dark theme
     st.set_page_config(page_title="Peek-A-Bet", page_icon="🎲", layout="wide", initial_sidebar_state="expanded")
@@ -25,7 +24,7 @@ if user:
             color: #ffffff;
         }}
         </style>
-    """, unsafe_allow_html=True)
+    """)
 
     # Initialize API Client
     api_client = APIClient()
@@ -289,5 +288,8 @@ if user:
             for ticket in st.session_state.tickets:
                 ticket.compute_outcome(game_scores)
         st.success("Scores and statuses updated!")
+
+    # Add logout button
+    logout()
 else:
     st.write("Please log in to access the app.")
