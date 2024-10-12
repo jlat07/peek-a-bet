@@ -1,8 +1,6 @@
 import streamlit as st
 from utils.api_client import APIClient
-from utils.data_and_config import bet_types, spread_values, over_under_values
-from utils.ticket import Ticket
-from data_and_config import auth
+from utils.auth import auth  # Import auth from auth.py
 
 # Authenticate user
 user = auth.authenticate()
