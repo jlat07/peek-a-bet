@@ -9,3 +9,4 @@ pytest
 realtime-py
 requests
 streamlit-autorefresh
+streamlit_supabase_auth
