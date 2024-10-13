@@ -102,12 +102,12 @@ else:
                 matchups_data[selected_matchup]['home_team'],
                 matchups_data[selected_matchup]['away_team']
             ])
-            selected_value = st.selectbox('Select Spread', config.spread_values)
+            selected_value = st.number_input('Enter Spread Value', min_value=-100.0, max_value=100.0, step=0.5)
             bet_details['value'] = selected_value
             bet_details['team'] = selected_team
         else:
             over_under_choice = st.selectbox('Over or Under', ['Over', 'Under'])
-            selected_value = st.selectbox('Select Over/Under Value', config.over_under_values)
+            selected_value = st.number_input('Select Over/Under Value', min_value=0, step=0.5)
             bet_details['value'] = selected_value
             bet_details['over_under'] = over_under_choice
 
