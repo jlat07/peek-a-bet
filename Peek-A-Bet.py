@@ -24,30 +24,30 @@ else:
     THEME_COLOR = config.THEME_COLOR  # Use the theme color from config
 
     # Apply custom CSS for dark theme and neon colors
-    st.markdown(f"""
-    <style>
-    .stApp {{
-        background-color: #1e1e1e;
-        color: #ffffff;
-    }}
-    .stButton>button {{
-        background-color: {THEME_COLOR};
-        color: #ffffff;
-    }}
-    .stButton.remove-bet>button {{
-        background-color: #ff4b4b;  /* Red for Remove Bet */
-        color: #ffffff;
-    }}
-    .stButton.edit-bet>button {{
-        background-color: #1e90ff;  /* Blue for Edit Bet */
-        color: #ffffff;
-    }}
-    .stButton.finalize-bet>button {{
-        background-color: #32cd32;  /* Green for Finalize Bet */
-        color: #ffffff;
-    }}
-    </style>
-""", unsafe_allow_html=True)
+    ``st.markdown(f"""
+        <style>
+        .stApp {{
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }}
+        .stButton>button {{
+            background-color: {THEME_COLOR};
+            color: #ffffff;
+        }}
+        .stButton.remove-bet>button {{
+            background-color: #ff4b4b;  /* Red for Remove Bet */
+            color: #ffffff;
+        }}
+        .stButton.edit-bet-{idx}>button {{
+            background-color: #1e90ff;  /* Blue for Edit Bet */
+            color: #ffffff;
+        }}
+        .stButton.finalize-bet>button {{
+            background-color: #32cd32;  /* Green for Finalize Bet */
+            color: #ffffff;
+        }}
+        </style>
+    """, unsafe_allow_html=True)
 
     # Initialize API Client
     api_client = APIClient()
@@ -219,11 +219,11 @@ else:
             st.write(f"**Bet #{idx + 1}:** {matchup} - {bet['type']} {bet['value']}")
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("Edit Bet", key=f"edit_{idx}", help="Edit Bet", css_class="edit-bet"):
+                if st.button("Edit Bet", key=f"edit_{idx}", help="Edit Bet"):
                     st.session_state.editing_bet_index = idx
                     st.rerun()
             with col2:
-                if st.button("Remove Bet", key=f"remove_{idx}", help="Remove Bet", css_class="remove-bet"):
+                if st.button("Remove Bet", key=f"remove_{idx}", help="Remove Bet"):
                     st.session_state.draft_ticket['matchups'].pop(idx)
                     st.session_state.draft_ticket['bets'].pop(idx)
                     # Adjust editing_bet_index if necessary
@@ -237,7 +237,7 @@ else:
         st.write("No bets in draft ticket.")
 
     # Finalize Ticket Button
-    if st.button("Finalize Ticket", key="finalize_bet", help="Finalize Ticket", css_class="finalize-bet"):
+    if st.button("Finalize Ticket", key="finalize_bet", help="Finalize Ticket"):
         finalize_ticket()
 
     st.info("Note: Finalized tickets cannot be edited. If you need to make changes, please remove the ticket and create a new one.")
@@ -310,7 +310,7 @@ else:
                 </div>
                 """
                 st.markdown(bet_info_full, unsafe_allow_html=True)
-            if st.button("Remove Ticket", key=f"remove_ticket_{ticket.ticket_id}", css_class="remove-bet"):
+            if st.button("Remove Ticket", key=f"remove_ticket_{ticket.ticket_id}"):
                 st.session_state.tickets.pop(idx)
                 st.success(f"Ticket {ticket.ticket_id} removed.")
                 st.rerun()
