@@ -2,6 +2,7 @@ import streamlit as st
 from utils.api_client import APIClient
 from utils.ticket import Ticket
 from utils.auth import authenticate, logout
+from utils.data_and_config import bet_types  # Import bet_types
 
 # Set page configuration for dark theme
 st.set_page_config(page_title="Peek-A-Bet", page_icon="🎟️", layout="wide")
