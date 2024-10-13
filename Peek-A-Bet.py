@@ -25,17 +25,29 @@ else:
 
     # Apply custom CSS for dark theme and neon colors
     st.markdown(f"""
-        <style>
-        .stApp {{
-            background-color: #1e1e1e;
-            color: #ffffff;
-        }}
-        .stButton>button {{
-            background-color: {THEME_COLOR};
-            color: #ffffff;
-        }}
-        </style>
-    """, unsafe_allow_html=True)
+    <style>
+    .stApp {{
+        background-color: #1e1e1e;
+        color: #ffffff;
+    }}
+    .stButton>button {{
+        background-color: {THEME_COLOR};
+        color: #ffffff;
+    }}
+    .stButton.remove-bet>button {{
+        background-color: #ff4b4b;  /* Red for Remove Bet */
+        color: #ffffff;
+    }}
+    .stButton.edit-bet>button {{
+        background-color: #1e90ff;  /* Blue for Edit Bet */
+        color: #ffffff;
+    }}
+    .stButton.finalize-bet>button {{
+        background-color: #32cd32;  /* Green for Finalize Bet */
+        color: #ffffff;
+    }}
+    </style>
+""", unsafe_allow_html=True)
 
     # Initialize API Client
     api_client = APIClient()
