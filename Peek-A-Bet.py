@@ -21,7 +21,7 @@ else:
     logout()
     
     # Main app logic after login goes here...
-    THEME_COLOR = "#228B22"  # Forest Green color for the theme
+    THEME_COLOR = config.THEME_COLOR  # Use the theme color from config
 
     # Apply custom CSS for dark theme and neon colors
     st.markdown(f"""
@@ -31,15 +31,33 @@ else:
             color: #ffffff;
         }}
         .stButton>button {{
-            background-color: {config.THEME_COLOR};
+            background-color: {THEME_COLOR};
             color: #ffffff;
         }}
         </style>
-    """)
+    """, unsafe_allow_html=True)
 
     # Initialize API Client
     api_client = APIClient()
-    ticket = Ticket()
+
+    # Function to Initialize Session State
+    def initialize_session_state():
+        if 'tickets' not in st.session_state:
+            st.session_state.tickets = []
+        if 'draft_ticket' not in st.session_state:
+            st.session_state.draft_ticket = {'matchups': [], 'bets': []}
+        if 'ticket_counter' not in st.session_state:
+            st.session_state.ticket_counter = 1
+
+    # Call the initialization function
+    initialize_session_state()
+
+    # Example of proper `Ticket` instantiation:
+    ticket_id = st.session_state.ticket_counter
+    matchups = st.session_state.draft_ticket['matchups']
+    bets = st.session_state.draft_ticket['bets']
+    if matchups and bets:
+        ticket = Ticket(ticket_id, matchups, bets)
 
     # Function to Initialize Session State
     def initialize_session_state():
