@@ -42,6 +42,7 @@ else:
 
     # Initialize API Client
     api_client = APIClient()
+    ticket = Ticket()
 
     # Function to Initialize Session State
     def initialize_session_state():

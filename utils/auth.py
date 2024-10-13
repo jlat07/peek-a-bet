@@ -18,7 +18,7 @@ def authenticate():
         return None
 
     # Update query param to reset URL fragments
-    st.query_params(page=["success"])
+    st.experimental_set_query_params(page=["success"])
     return session
 
 def logout():
