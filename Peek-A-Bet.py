@@ -24,7 +24,7 @@ else:
     THEME_COLOR = config.THEME_COLOR  # Use the theme color from config
 
     # Apply custom CSS for dark theme and neon colors
-    ``st.markdown(f"""
+    st.markdown(f"""
         <style>
         .stApp {{
             background-color: #1e1e1e;
