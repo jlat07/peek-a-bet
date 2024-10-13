@@ -21,7 +21,7 @@ else:
     logout()
     
     # Main app logic after login goes here...
-    THEME_COLOR = "#228B22"  # Forest Green color for the theme
+    THEME_COLOR = config.THEME_COLOR  # Use the theme color from config
 
     # Apply custom CSS for dark theme and neon colors
     st.markdown(f"""
@@ -31,7 +31,7 @@ else:
             color: #ffffff;
         }}
         .stButton>button {{
-            background-color: {config.THEME_COLOR};
+            background-color: {THEME_COLOR};
             color: #ffffff;
         }}
         </style>
@@ -56,7 +56,7 @@ else:
     def get_user_input():
         # Fetch available matchups dynamically
         with st.spinner("Fetching matchups..."):
-            matchups_data = api_client.get_matchups()
+            matchups_data = api_client.get_matchups() if not config.USE_MOCK_DATA else config.mock_matchups
         matchup_options = list(matchups_data.keys())
 
         if not matchup_options:
@@ -116,7 +116,7 @@ else:
                 delta = bet.get('delta', None)
 
                 # Get current scores
-                game_score = api_client.get_scores().get(matchup, {})
+                game_score = api_client.get_scores().get(matchup, {}) if not config.USE_MOCK_DATA else config.mock_scores.get(matchup, {})
                 home_score = game_score.get('home_score')
                 away_score = game_score.get('away_score')
 
@@ -183,7 +183,7 @@ else:
     if st.button("Refresh"):
         with st.spinner("Updating scores and bet statuses..."):
             # Fetch scores and update bets
-            game_scores = api_client.get_scores()
+            game_scores = api_client.get_scores() if not config.USE_MOCK_DATA else config.mock_scores
             for ticket in st.session_state.tickets:
                 ticket.compute_outcome(game_scores)
         st.success("Scores and statuses updated!")
