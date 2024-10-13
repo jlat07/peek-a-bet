@@ -16,34 +16,38 @@ if not session:
 else:
     # User is logged in, display the main app content
     st.success(f"Welcome, {session['user']['email']}!")
-    
+
     # Logout button in the sidebar
     logout()
-    
+
     # Main app logic after login goes here...
     THEME_COLOR = config.THEME_COLOR  # Use the theme color from config
 
     # Apply custom CSS for dark theme and neon colors
     st.markdown(f"""
-        <style>
-        .stApp {{
-            background-color: #1e1e1e;
-            color: #ffffff;
-        }}
-        .stButton>button {{
-            background-color: {THEME_COLOR};
-            color: #ffffff;
-        }}
-        .stButton.remove-bet>button {{
-            background-color: #ff4b4b;  /* Red for Remove Bet */
-            color: #ffffff;
-        }}
-        .stButton.finalize-bet>button {{
-            background-color: #32cd32;  /* Green for Finalize Bet */
-            color: #ffffff;
-        }}
-        </style>
-    """, unsafe_allow_html=True)
+    <style>
+    .stApp {{
+        background-color: #1e1e1e;
+        color: #ffffff;
+    }}
+    .stButton>button {{
+        background-color: {THEME_COLOR};
+        color: #ffffff;
+    }}
+    .stButton.remove-bet>button {{
+        background-color: #ff4b4b;  /* Red for Remove Bet */
+        color: #ffffff;
+    }}
+    .stButton.edit-bet>button {{
+        background-color: #1e90ff;  /* Blue for Edit Bet */
+        color: #ffffff;
+    }}
+    .stButton.finalize-bet>button {{
+        background-color: #32cd32;  /* Green for Finalize Bet */
+        color: #ffffff;
+    }}
+    </style>
+""", unsafe_allow_html=True)
 
     # Initialize API Client
     api_client = APIClient()
@@ -215,11 +219,11 @@ else:
             st.write(f"**Bet #{idx + 1}:** {matchup} - {bet['type']} {bet['value']}")
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("Edit Bet", key=f"edit_{idx}", help="Edit Bet"):
+                if st.button("Edit Bet", key=f"edit_{idx}"):
                     st.session_state.editing_bet_index = idx
                     st.rerun()
             with col2:
-                if st.button("Remove Bet", key=f"remove_{idx}", help="Remove Bet"):
+                if st.button("Remove Bet", key=f"remove_{idx}"):
                     st.session_state.draft_ticket['matchups'].pop(idx)
                     st.session_state.draft_ticket['bets'].pop(idx)
                     # Adjust editing_bet_index if necessary
@@ -233,7 +237,7 @@ else:
         st.write("No bets in draft ticket.")
 
     # Finalize Ticket Button
-    if st.button("Finalize Ticket", key="finalize_bet", help="Finalize Ticket"):
+    if st.button("Finalize Ticket"):
         finalize_ticket()
 
     st.info("Note: Finalized tickets cannot be edited. If you need to make changes, please remove the ticket and create a new one.")
