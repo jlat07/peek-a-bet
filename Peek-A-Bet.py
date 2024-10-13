@@ -2,10 +2,7 @@ import streamlit as st
 from utils.api_client import APIClient
 from utils.ticket import Ticket
 from utils.auth import authenticate, logout
-from utils.data_and_config import (
-    USE_MOCK_DATA, API_KEY, BASE_URL, REGIONS, MARKETS, ODDS_FORMAT, DATE_FORMAT,
-    bet_types, spread_values, over_under_values, THEME_COLOR
-)
+import utils.data_and_config as config  # Import the entire module
 
 # Set page configuration for dark theme
 st.set_page_config(page_title="Peek-A-Bet", page_icon="🎟️", layout="wide")
@@ -34,7 +31,7 @@ else:
             color: #ffffff;
         }}
         .stButton>button {{
-            background-color: {THEME_COLOR};
+            background-color: {config.THEME_COLOR};
             color: #ffffff;
         }}
         </style>
@@ -78,7 +75,7 @@ else:
             return None, None
 
         selected_matchup = st.selectbox('Select Matchup', matchup_options)
-        selected_bet_type = st.selectbox('Bet Type', bet_types)
+        selected_bet_type = st.selectbox('Bet Type', config.bet_types)
 
         bet_details = {'type': selected_bet_type}
 
@@ -87,12 +84,12 @@ else:
                 matchups_data[selected_matchup]['home_team'],
                 matchups_data[selected_matchup]['away_team']
             ])
-            selected_value = st.selectbox('Select Spread', spread_values)
+            selected_value = st.selectbox('Select Spread', config.spread_values)
             bet_details['value'] = selected_value
             bet_details['team'] = selected_team
         else:
             over_under_choice = st.selectbox('Over or Under', ['Over', 'Under'])
-            selected_value = st.selectbox('Select Over/Under Value', over_under_values)
+            selected_value = st.selectbox('Select Over/Under Value', config.over_under_values)
             bet_details['value'] = selected_value
             bet_details['over_under'] = over_under_choice
 
@@ -139,7 +136,7 @@ else:
         st.markdown(f"**Matchup:** {selected_matchup}")
 
         # Bet Type Selection
-        selected_bet_type = st.selectbox('Bet Type', bet_types, index=bet_types.index(bet_details['type']))
+        selected_bet_type = st.selectbox('Bet Type', config.bet_types, index=config.bet_types.index(bet_details['type']))
 
         updated_bet_details = {'type': selected_bet_type}
 
@@ -151,12 +148,12 @@ else:
                 matchups_data[selected_matchup]['home_team'],
                 matchups_data[selected_matchup]['away_team']
             ].index(bet_details['team']))
-            selected_value = st.selectbox('Select Spread', spread_values, index=spread_values.index(float(bet_details['value'])))
+            selected_value = st.selectbox('Select Spread', config.spread_values, index=config.spread_values.index(float(bet_details['value'])))
             updated_bet_details['value'] = selected_value
             updated_bet_details['team'] = selected_team
         else:
             over_under_choice = st.selectbox('Over or Under', ['Over', 'Under'], index=['Over', 'Under'].index(bet_details['over_under']))
-            selected_value = st.selectbox('Select Over/Under Value', over_under_values, index=over_under_values.index(float(bet_details['value'])))
+            selected_value = st.selectbox('Select Over/Under Value', config.over_under_values, index=config.over_under_values.index(float(bet_details['value'])))
             updated_bet_details['value'] = selected_value
             updated_bet_details['over_under'] = over_under_choice
 
