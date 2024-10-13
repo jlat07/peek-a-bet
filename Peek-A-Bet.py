@@ -219,11 +219,11 @@ else:
             st.write(f"**Bet #{idx + 1}:** {matchup} - {bet['type']} {bet['value']}")
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("Edit Bet", key=f"edit_{idx}"):
+                if st.button("Edit Bet", key=f"edit_{idx}", help="Edit Bet", css_class="edit-bet"):
                     st.session_state.editing_bet_index = idx
                     st.rerun()
             with col2:
-                if st.button("Remove Bet", key=f"remove_{idx}"):
+                if st.button("Remove Bet", key=f"remove_{idx}", help="Remove Bet", css_class="remove-bet"):
                     st.session_state.draft_ticket['matchups'].pop(idx)
                     st.session_state.draft_ticket['bets'].pop(idx)
                     # Adjust editing_bet_index if necessary
@@ -237,7 +237,7 @@ else:
         st.write("No bets in draft ticket.")
 
     # Finalize Ticket Button
-    if st.button("Finalize Ticket"):
+    if st.button("Finalize Ticket", key="finalize_bet", help="Finalize Ticket", css_class="finalize-bet"):
         finalize_ticket()
 
     st.info("Note: Finalized tickets cannot be edited. If you need to make changes, please remove the ticket and create a new one.")
@@ -310,7 +310,7 @@ else:
                 </div>
                 """
                 st.markdown(bet_info_full, unsafe_allow_html=True)
-            if st.button("Remove Ticket", key=f"remove_ticket_{ticket.ticket_id}"):
+            if st.button("Remove Ticket", key=f"remove_ticket_{ticket.ticket_id}", css_class="remove-bet"):
                 st.session_state.tickets.pop(idx)
                 st.success(f"Ticket {ticket.ticket_id} removed.")
                 st.rerun()
