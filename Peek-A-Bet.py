@@ -38,10 +38,6 @@ else:
             background-color: #ff4b4b;  /* Red for Remove Bet */
             color: #ffffff;
         }}
-        .stButton.edit-bet-{idx}>button {{
-            background-color: #1e90ff;  /* Blue for Edit Bet */
-            color: #ffffff;
-        }}
         .stButton.finalize-bet>button {{
             background-color: #32cd32;  /* Green for Finalize Bet */
             color: #ffffff;
