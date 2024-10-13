@@ -22,4 +22,4 @@ spread_values = [float(x) for x in range(-20, 21)]  # Including zero
 over_under_values = [float(x) for x in range(30, 71)]  # Over/Under values from 30 to 70
 
 # Theme Configuration
-THEME_COLOR = "#39FF14"  # Neon green color for the theme
+THEME_COLOR = "#228B22"  # Forest green color for the theme
