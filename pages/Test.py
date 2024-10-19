@@ -135,13 +135,69 @@ else:
     if st.session_state.tickets:
         for idx, ticket in enumerate(st.session_state.tickets):
             st.markdown(f"## 🎟️ Ticket {ticket.ticket_id}")
-            
-            # Use the computed outcome and display status from Ticket class
+
             for i, (matchup, bet) in enumerate(zip(ticket.matchups, ticket.bets)):
                 bet_info = f"**Bet #{i + 1}:** {matchup} - {bet['type']} {bet['value']}"
-                status_icon = "⏳" if bet['status'] == "Game Not Started" else ("✅" if bet['status'] == "Won" else "❌")
-                st.markdown(f"{status_icon} {bet_info} - Status: {bet['status']}")
 
+                # Get bet status and delta
+                bet_status = bet.get('status', 'Game Not Started')
+                delta = bet.get('delta', None)
+
+                # Get current scores from mock data
+                game_score = api_client.get_scores().get(matchup, {})
+                home_score = game_score.get('home_score')
+                away_score = game_score.get('away_score')
+
+                # Prepare score display
+                if home_score is not None and away_score is not None:
+                    score_display = f"{game_score['home_team']} {home_score} - {away_score} {game_score['away_team']}"
+                else:
+                    score_display = "Scores not available"
+
+                # Prepare delta display
+                if delta is not None:
+                    delta_display = f"Delta: {delta:+.1f}"
+                else:
+                    delta_display = ""
+
+                # Additional info for bets
+                if home_score is not None and away_score is not None:
+                    if bet['type'] == 'Total':
+                        total_score = home_score + away_score
+                        extra_info = f"Total Score: {total_score}, Over/Under: {bet['value']}"
+                    elif bet['type'] == 'Spread':
+                        selected_team = bet.get('team')
+                        extra_info = f"Selected Team: {selected_team}, Spread: {bet['value']}"
+                    else:
+                        extra_info = ""
+                else:
+                    extra_info = ""
+
+                # Status coloring
+                if bet_status in ["Currently Winning", "Won"]:
+                    status_icon = "✅"
+                    status_color = THEME_COLOR
+                elif bet_status in ["Currently Losing", "Lost"]:
+                    status_icon = "❌"
+                    status_color = "#ff4d4d"
+                else:
+                    status_icon = "⏳"
+                    status_color = "#888888"
+
+                # Display bet info
+                bet_info_full = f"""
+                <div style='border: 1px solid #444; padding: 10px; margin-bottom: 5px; background-color: #2e2e2e;'>
+                    <span style='color: {status_color}; font-size: 20px;'>{status_icon}</span>
+                    {bet_info}<br>
+                    <strong>Score:</strong> {score_display}<br>
+                    <strong>{extra_info}</strong><br>
+                    <strong>{delta_display}</strong><br>
+                    <strong>Status:</strong> {bet_status}
+                </div>
+                """
+                st.markdown(bet_info_full, unsafe_allow_html=True)
+
+            # Remove Ticket button
             if st.button("Remove Ticket", key=f"remove_ticket_{ticket.ticket_id}"):
                 st.session_state.tickets.pop(idx)
                 st.success(f"Ticket {ticket.ticket_id} removed.")
@@ -149,11 +205,10 @@ else:
     else:
         st.write("No finalized tickets.")
 
+    # Manual Refresh Button
     st.subheader("Update Ticket Statuses")
     if st.button("Refresh"):
         with st.spinner("Updating scores and bet statuses..."):
-            # Fetch the latest scores from the API (mock data in this case)
-            game_scores = api_client.get_scores()
             for ticket in st.session_state.tickets:
-                ticket.compute_outcome(game_scores)  # Ticket now handles its own status updates
+                ticket.update_status(api_client.get_scores())
             st.experimental_rerun()
