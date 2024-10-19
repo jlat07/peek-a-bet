@@ -2,8 +2,8 @@ import streamlit as st
 from utils.api_client import APIClient
 from utils.ticket import Ticket
 from utils.auth import authenticate, logout
+#from utils.database import fetch_tickets, insert_ticket # Import database functions
 import utils.data_and_config as config  # Import the entire module
-from utils.database import fetch_tickets, insert_ticket # Import database functions
 
 # Set page configuration for dark theme
 st.set_page_config(page_title="🏈 Parlay Check", page_icon="🏈", layout="wide")
