@@ -71,12 +71,12 @@ else:
                 matchups_data[selected_matchup]['home_team'],
                 matchups_data[selected_matchup]['away_team']
             ])
-            selected_value = st.number_input('Enter Spread Value', min_value=-100.0, max_value=100.0, step=0.5)
+            selected_value = st.number_input('Enter Spread Value', value=0.0, min_value=-100.0, max_value=100.0, step=0.5)
             bet_details['value'] = selected_value
             bet_details['team'] = selected_team
         else:
             over_under_choice = st.radio('Over or Under', ['Over', 'Under'])
-            selected_value = st.number_input('Enter Over/Under Value', min_value=0, step=0.5)
+            selected_value = st.number_input('Enter Over/Under Value', value=0.0, min_value=0.0, step=0.5)
             bet_details['value'] = selected_value
             bet_details['over_under'] = over_under_choice
 
@@ -110,6 +110,14 @@ else:
         if selected_matchup and bet_details:
             add_bet_to_draft(selected_matchup, bet_details)
             st.success("Bet added to draft ticket!")
+
+    # Display Draft Ticket
+    st.subheader("Draft Ticket")
+    if st.session_state.draft_ticket['bets']:
+        for idx, (matchup, bet) in enumerate(zip(st.session_state.draft_ticket['matchups'], st.session_state.draft_ticket['bets'])):
+            st.write(f"**Bet #{idx + 1}:** {matchup} - {bet['type']} {bet['value']}")
+    else:
+        st.write("No bets in draft ticket.")
 
     # Function to Finalize a Ticket
     def finalize_ticket():
@@ -209,6 +217,8 @@ else:
     st.subheader("Update Ticket Statuses")
     if st.button("Refresh"):
         with st.spinner("Updating scores and bet statuses..."):
+            # Refresh logic
+            game_scores = api_client.get_scores()
             for ticket in st.session_state.tickets:
-                ticket.update_status(api_client.get_scores())
-            st.experimental_rerun()
+                ticket.compute_outcome(game_scores)  # Make sure the Ticket class has compute_outcome method
+        st.experimental_rerun()
