@@ -3,9 +3,10 @@ from utils.api_client import APIClient
 from utils.ticket import Ticket
 from utils.auth import authenticate, logout
 import utils.data_and_config as config  # Import the entire module
+from utils.db import fetch_tickets, insert_ticket  # Import database functions
 
 # Set page configuration for dark theme
-st.set_page_config(page_title="Parlay Check", page_icon="🏈", layout="wide")
+st.set_page_config(page_title="🏈 Parlay Check", page_icon="🏈", layout="wide")
 
 # Initialize authentication
 session = authenticate()
@@ -20,108 +21,164 @@ else:
     # Logout button in the sidebar
     logout()
 
+    # Main app logic after login goes here...
+    THEME_COLOR = config.THEME_COLOR  # Use the theme color from config
+
     # Apply custom CSS for dark theme and neon colors
-    THEME_COLOR = "#228B22"  # Forest Green color for the theme
     st.markdown(f"""
-        <style>
-        .stApp {{
-            background-color: #1e1e1e;
-            color: #ffffff;
-        }}
-        .stButton>button {{
-            background-color: {config.THEME_COLOR};
-            color: #ffffff;
-        }}
-        </style>
-    """)
+    <style>
+    .stApp {{
+        background-color: #1e1e1e;
+        color: #ffffff;
+    }}
+    .stButton>button {{
+        background-color: {THEME_COLOR};
+        color: #ffffff;
+    }}
+    .stButton.remove-bet>button {{
+        background-color: #ff4b4b;  /* Red for Remove Bet */
+        color: #ffffff;
+    }}
+    .stButton.edit-bet>button {{
+        background-color: #1e90ff;  /* Blue for Edit Bet */
+        color: #ffffff;
+    }}
+    .stButton.finalize-bet>button {{
+        background-color: #32cd32;  /* Green for Finalize Bet */
+        color: #ffffff;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
     # Initialize API Client
     api_client = APIClient()
 
-    # Fetch matchups from the database based on week
-    def get_matchups_for_week(week):
-        # Replace this with actual database fetching logic
-        matchups = {
-            "Week 5": [
-                {"home_team": "Buccaneers", "away_team": "Panthers", "home_score": 23, "away_score": 20, "status": "In Progress"},
-                {"home_team": "Raiders", "away_team": "Vikings", "home_score": 14, "away_score": 10, "status": "In Progress"},
-            ]
-        }
-        return matchups.get(week, [])
+    # Function to Initialize Session State
+    def initialize_session_state():
+        if 'tickets' not in st.session_state:
+            st.session_state.tickets = []
+        if 'draft_ticket' not in st.session_state:
+            st.session_state.draft_ticket = {'matchups': [], 'bets': []}
+        if 'ticket_counter' not in st.session_state:
+            st.session_state.ticket_counter = 1
 
-    # Page title with football emoji
+    # Call the initialization function
+    initialize_session_state()
+
+    # Simulated Weeks and Teams for Mock Data
+    mock_weeks = {
+        "Week 5": {
+            "Buccaneers vs Dolphins": {"home_team": "Buccaneers", "away_team": "Dolphins"},
+            "Panthers vs Falcons": {"home_team": "Panthers", "away_team": "Falcons"},
+        },
+        "Week 6": {
+            "Packers vs Bears": {"home_team": "Packers", "away_team": "Bears"},
+            "Raiders vs Broncos": {"home_team": "Raiders", "away_team": "Broncos"},
+        }
+    }
+
+    # Function to Simulate Matchups by Week
+    def get_matchups_by_week(selected_week):
+        return mock_weeks.get(selected_week, {})
+
+    # User Input Function
+    def get_user_input():
+        # Select Week
+        selected_week = st.selectbox("Select Week", list(mock_weeks.keys()))
+
+        # Fetch matchups dynamically based on selected week
+        matchups_data = get_matchups_by_week(selected_week)
+        matchup_options = list(matchups_data.keys())
+
+        if not matchup_options:
+            st.error("No matchups available at the moment.")
+            return None, None
+
+        selected_matchup = st.selectbox('Select Team', matchup_options)
+
+        # Bet Type Selection (Spread or Total)
+        bet_type = st.radio('Select Bet Type', ['Spread', 'Total'], horizontal=True)
+
+        bet_details = {'type': bet_type}
+
+        # Input Bet Value
+        if bet_type == 'Spread':
+            selected_team = st.selectbox('Select Team', [
+                matchups_data[selected_matchup]['home_team'],
+                matchups_data[selected_matchup]['away_team']
+            ])
+            selected_value = st.number_input('Enter Spread Value', min_value=-100.0, max_value=100.0, step=0.5)
+            bet_details['value'] = selected_value
+            bet_details['team'] = selected_team
+        else:
+            selected_value = st.number_input('Enter Total Value (Over/Under)', min_value=0.0, max_value=100.0, step=0.5)
+            over_under_choice = st.selectbox('Over or Under', ['Over', 'Under'])
+            bet_details['value'] = selected_value
+            bet_details['over_under'] = over_under_choice
+
+        return selected_matchup, bet_details
+
+    # Function to Add Bet to Draft
+    def add_bet_to_draft(selected_matchup, bet_details):
+        st.session_state.draft_ticket['matchups'].append(selected_matchup)
+        st.session_state.draft_ticket['bets'].append(bet_details)
+
+    # Function to Finalize a Ticket
+    def finalize_ticket():
+        num_bets = len(st.session_state.draft_ticket['bets'])
+        if 3 <= num_bets <= 10:
+            ticket_id = st.session_state.ticket_counter
+            st.session_state.ticket_counter += 1
+            new_ticket = Ticket(ticket_id, st.session_state.draft_ticket['matchups'], st.session_state.draft_ticket['bets'])
+            new_ticket.validate()
+            st.session_state.tickets.append(new_ticket)
+            st.session_state.draft_ticket = {'matchups': [], 'bets': []}
+            st.success(f"Ticket {ticket_id} finalized!")
+        else:
+            st.error("A ticket must have between 3 and 10 bets.")
+
+    # UI Elements and Logic
     st.title("🏈 Parlay Check")
 
-    # Select Week Dropdown
-    week_options = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]  # Example values
-    selected_week = st.selectbox('Select Week', week_options)
+    selected_matchup, bet_details = get_user_input()
 
-    # Fetch and show matchups for the selected week
-    matchups = get_matchups_for_week(selected_week)
-    
-    if matchups:
-        # Team selection
-        team_options = [matchup['home_team'] for matchup in matchups] + [matchup['away_team'] for matchup in matchups]
-        selected_team = st.selectbox('Select Team', team_options)
+    # Add Bet Button
+    if st.button("Add Bet"):
+        if selected_matchup and bet_details:
+            add_bet_to_draft(selected_matchup, bet_details)
+            st.success("Bet added to draft ticket!")
 
-        # Automatically find the opponent based on the selected team
-        opponent = None
-        for matchup in matchups:
-            if selected_team == matchup['home_team']:
-                opponent = matchup['away_team']
-                home_score = matchup['home_score']
-                away_score = matchup['away_score']
-                break
-            elif selected_team == matchup['away_team']:
-                opponent = matchup['home_team']
-                home_score = matchup['home_score']
-                away_score = matchup['away_score']
-                break
-        
-        if opponent:
-            st.write(f"Opponent: {opponent}")
-
-            # Radio button to select bet type (Spread or Total)
-            bet_type = st.radio(
-                "Select Bet Type",
-                ('Spread', 'Total'),
-                horizontal=True  # Display radio buttons horizontally
-            )
-
-            # Input field for Bet Value
-            bet_value = st.number_input(f"Bet Value ({bet_type})", min_value=0.0, step=0.5)
-
-            # Example of adding a bet based on user inputs
-            if st.button("Add Bet"):
-                new_bet = {
-                    "week": selected_week,
-                    "team": selected_team,
-                    "opponent": opponent,
-                    "bet_type": bet_type,
-                    "bet_value": bet_value
-                }
-                # You can add this bet to the draft ticket or process further.
-                st.success(f"Bet added for {selected_team} vs {opponent} in {selected_week} with {bet_type} of {bet_value}")
-                
-            # Display live scores and evaluate conditions
-            st.subheader("Live Scores and Bet Evaluation")
-            total_score = home_score + away_score
-            if bet_type == 'Total':
-                delta = total_score - bet_value
-                status = "Won" if delta <= 0 else "Lost"
-                st.write(f"Total Score: {home_score} + {away_score} = {total_score}")
-                st.write(f"Delta: {delta}")
-                st.write(f"Status: {status}")
-            elif bet_type == 'Spread':
-                if selected_team == matchup['home_team']:
-                    delta = home_score + bet_value - away_score
-                else:
-                    delta = away_score + bet_value - home_score
-                status = "Won" if delta > 0 else "Lost"
-                st.write(f"Score: {home_score} (Home) vs {away_score} (Away)")
-                st.write(f"Delta: {delta}")
-                st.write(f"Status: {status}")
-        else:
-            st.error("Invalid team selection. Please select a valid team.")
+    # Display Draft Ticket
+    st.subheader("Draft Ticket")
+    if st.session_state.draft_ticket['bets']:
+        for idx, (matchup, bet) in enumerate(zip(st.session_state.draft_ticket['matchups'], st.session_state.draft_ticket['bets'])):
+            st.write(f"**Bet #{idx + 1}:** {matchup} - {bet['type']} {bet['value']}")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Edit Bet", key=f"edit_{idx}"):
+                    st.session_state.editing_bet_index = idx
+                    st.rerun()
+            with col2:
+                if st.button("Remove Bet", key=f"remove_{idx}"):
+                    st.session_state.draft_ticket['matchups'].pop(idx)
+                    st.session_state.draft_ticket['bets'].pop(idx)
+                    st.rerun()
     else:
-        st.write("No matchups available for the selected week.")
+        st.write("No bets in draft ticket.")
+
+    # Finalize Ticket Button
+    if st.button("Finalize Ticket"):
+        finalize_ticket()
+
+    # Display Finalized Tickets
+    st.subheader("Your Tickets")
+    if st.session_state.tickets:
+        for idx, ticket in enumerate(st.session_state.tickets):
+            st.markdown(f"## 🎟️ Ticket {ticket.ticket_id}")
+            for i, (matchup, bet) in enumerate(zip(ticket.matchups, ticket.bets)):
+                bet_info = f"**Bet #{i + 1}:** {matchup} - {bet['type']} {bet['value']}"
+
+                # Prepare status, score, and delta for bet
+                st.write(bet_info)
+    else:
+        st.write("No finalized tickets.")
