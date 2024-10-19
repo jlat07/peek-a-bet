@@ -21,10 +21,8 @@ else:
     # Logout button in the sidebar
     logout()
 
-    # Main app logic after login goes here...
+    # Custom CSS for dark theme and neon colors
     THEME_COLOR = config.THEME_COLOR  # Use the theme color from config
-
-    # Apply custom CSS for dark theme and neon colors
     st.markdown(f"""
     <style>
     .stApp {{
@@ -107,11 +105,11 @@ else:
                 matchups_data[selected_matchup]['home_team'],
                 matchups_data[selected_matchup]['away_team']
             ])
-            selected_value = st.number_input('Enter Spread Value', min_value=-100.0, max_value=100.0, step=0.5)
+            selected_value = st.number_input('Enter Spread Value', value=0.0, min_value=-100.0, max_value=100.0, step=0.5)
             bet_details['value'] = selected_value
             bet_details['team'] = selected_team
         else:
-            selected_value = st.number_input('Enter Total Value (Over/Under)', min_value=0.0, max_value=100.0, step=0.5)
+            selected_value = st.number_input('Enter Total Value (Over/Under)', value=0.0, min_value=0.0, max_value=100.0, step=0.5)
             over_under_choice = st.selectbox('Over or Under', ['Over', 'Under'])
             bet_details['value'] = selected_value
             bet_details['over_under'] = over_under_choice
@@ -167,8 +165,10 @@ else:
         st.write("No bets in draft ticket.")
 
     # Finalize Ticket Button
-    if st.button("Finalize Ticket"):
+    if st.button("Finalize Ticket", key="finalize"):
         finalize_ticket()
+
+    st.info("Note: Finalized tickets cannot be edited. If you need to make changes, please remove the ticket and create a new one.")
 
     # Display Finalized Tickets
     st.subheader("Your Tickets")
@@ -182,3 +182,13 @@ else:
                 st.write(bet_info)
     else:
         st.write("No finalized tickets.")
+
+    # Manual Refresh Button
+    st.subheader("Update Ticket Statuses")
+    if st.button("Refresh"):
+        with st.spinner("Updating scores and bet statuses..."):
+            # Fetch scores and update bets
+            game_scores = api_client.get_scores()
+            for ticket in st.session_state.tickets:
+                ticket.compute_outcome(game_scores)
+        st.success("Scores and statuses updated!")
