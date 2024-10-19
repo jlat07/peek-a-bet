@@ -1,5 +1,3 @@
-# utils/ticket.py
-
 class Ticket:
     def __init__(self, ticket_id, matchups, bets):
         self.ticket_id = ticket_id
@@ -18,6 +16,10 @@ class Ticket:
         # Additional validation rules can be added here
 
     def compute_outcome(self, game_scores):
+        """
+        Evaluates and updates the status of each bet based on current game scores.
+        This function modifies the bet dictionaries within the ticket.
+        """
         for i, bet in enumerate(self.bets):
             bet_type = bet["type"].lower()
             bet_value = float(bet["value"])
@@ -63,10 +65,10 @@ class Ticket:
                     bet["status"] = "Currently Tied"
 
                 # If the game is completed, set final status
-                if game_score['completed']:
+                if game_score.get('completed', False):
                     bet["status"] = "Won" if adjusted_score > opponent_score else "Lost"
 
-            elif bet_type == "over/under":
+            elif bet_type == "total":
                 total_score = home_score + away_score
                 over_under_choice = bet['over_under'].lower()
                 bet["delta"] = total_score - bet_value
@@ -87,7 +89,7 @@ class Ticket:
                         bet["status"] = "Currently Tied"
 
                 # If the game is completed, set final status
-                if game_score['completed']:
+                if game_score.get('completed', False):
                     if over_under_choice == 'over':
                         bet["status"] = "Won" if total_score > bet_value else "Lost"
                     else:

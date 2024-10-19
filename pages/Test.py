@@ -71,12 +71,12 @@ else:
                 matchups_data[selected_matchup]['home_team'],
                 matchups_data[selected_matchup]['away_team']
             ])
-            selected_value = st.number_input('Enter Spread Value', value=0.0, min_value=-100.0, max_value=100.0, step=0.5)
+            selected_value = st.number_input('Enter Spread Value', min_value=-100.0, max_value=100.0, step=0.5)
             bet_details['value'] = selected_value
             bet_details['team'] = selected_team
         else:
             over_under_choice = st.radio('Over or Under', ['Over', 'Under'])
-            selected_value = st.number_input('Enter Over/Under Value', value=0.0, min_value=0.0, step=0.5)
+            selected_value = st.number_input('Enter Over/Under Value', min_value=0, step=0.5)
             bet_details['value'] = selected_value
             bet_details['over_under'] = over_under_choice
 
@@ -111,14 +111,6 @@ else:
             add_bet_to_draft(selected_matchup, bet_details)
             st.success("Bet added to draft ticket!")
 
-    # Display Draft Ticket
-    st.subheader("Draft Ticket")
-    if st.session_state.draft_ticket['bets']:
-        for idx, (matchup, bet) in enumerate(zip(st.session_state.draft_ticket['matchups'], st.session_state.draft_ticket['bets'])):
-            st.write(f"**Bet #{idx + 1}:** {matchup} - {bet['type']} {bet['value']}")
-    else:
-        st.write("No bets in draft ticket.")
-
     # Function to Finalize a Ticket
     def finalize_ticket():
         num_bets = len(st.session_state.draft_ticket['bets'])
@@ -143,69 +135,13 @@ else:
     if st.session_state.tickets:
         for idx, ticket in enumerate(st.session_state.tickets):
             st.markdown(f"## 🎟️ Ticket {ticket.ticket_id}")
-
+            
+            # Use the computed outcome and display status from Ticket class
             for i, (matchup, bet) in enumerate(zip(ticket.matchups, ticket.bets)):
                 bet_info = f"**Bet #{i + 1}:** {matchup} - {bet['type']} {bet['value']}"
+                status_icon = "⏳" if bet['status'] == "Game Not Started" else ("✅" if bet['status'] == "Won" else "❌")
+                st.markdown(f"{status_icon} {bet_info} - Status: {bet['status']}")
 
-                # Get bet status and delta
-                bet_status = bet.get('status', 'Game Not Started')
-                delta = bet.get('delta', None)
-
-                # Get current scores from mock data
-                game_score = api_client.get_scores().get(matchup, {})
-                home_score = game_score.get('home_score')
-                away_score = game_score.get('away_score')
-
-                # Prepare score display
-                if home_score is not None and away_score is not None:
-                    score_display = f"{game_score['home_team']} {home_score} - {away_score} {game_score['away_team']}"
-                else:
-                    score_display = "Scores not available"
-
-                # Prepare delta display
-                if delta is not None:
-                    delta_display = f"Delta: {delta:+.1f}"
-                else:
-                    delta_display = ""
-
-                # Additional info for bets
-                if home_score is not None and away_score is not None:
-                    if bet['type'] == 'Total':
-                        total_score = home_score + away_score
-                        extra_info = f"Total Score: {total_score}, Over/Under: {bet['value']}"
-                    elif bet['type'] == 'Spread':
-                        selected_team = bet.get('team')
-                        extra_info = f"Selected Team: {selected_team}, Spread: {bet['value']}"
-                    else:
-                        extra_info = ""
-                else:
-                    extra_info = ""
-
-                # Status coloring
-                if bet_status in ["Currently Winning", "Won"]:
-                    status_icon = "✅"
-                    status_color = THEME_COLOR
-                elif bet_status in ["Currently Losing", "Lost"]:
-                    status_icon = "❌"
-                    status_color = "#ff4d4d"
-                else:
-                    status_icon = "⏳"
-                    status_color = "#888888"
-
-                # Display bet info
-                bet_info_full = f"""
-                <div style='border: 1px solid #444; padding: 10px; margin-bottom: 5px; background-color: #2e2e2e;'>
-                    <span style='color: {status_color}; font-size: 20px;'>{status_icon}</span>
-                    {bet_info}<br>
-                    <strong>Score:</strong> {score_display}<br>
-                    <strong>{extra_info}</strong><br>
-                    <strong>{delta_display}</strong><br>
-                    <strong>Status:</strong> {bet_status}
-                </div>
-                """
-                st.markdown(bet_info_full, unsafe_allow_html=True)
-
-            # Remove Ticket button
             if st.button("Remove Ticket", key=f"remove_ticket_{ticket.ticket_id}"):
                 st.session_state.tickets.pop(idx)
                 st.success(f"Ticket {ticket.ticket_id} removed.")
@@ -213,12 +149,11 @@ else:
     else:
         st.write("No finalized tickets.")
 
-    # Manual Refresh Button
     st.subheader("Update Ticket Statuses")
     if st.button("Refresh"):
         with st.spinner("Updating scores and bet statuses..."):
-            # Refresh logic
+            # Fetch the latest scores from the API (mock data in this case)
             game_scores = api_client.get_scores()
             for ticket in st.session_state.tickets:
-                ticket.compute_outcome(game_scores)  # Make sure the Ticket class has compute_outcome method
-        st.experimental_rerun()
+                ticket.compute_outcome(game_scores)  # Ticket now handles its own status updates
+            st.experimental_rerun()
