@@ -2,7 +2,6 @@ import streamlit as st
 from utils.api_client import APIClient
 from utils.ticket import Ticket
 from utils.auth import authenticate, logout
-#from utils.database import fetch_tickets, insert_ticket # Import database functions
 import utils.data_and_config as config  # Import the entire module
 
 # Set page configuration for dark theme
@@ -21,8 +20,8 @@ else:
     # Logout button in the sidebar
     logout()
 
-    # Custom CSS for dark theme and neon colors
-    THEME_COLOR = config.THEME_COLOR  # Use the theme color from config
+    # Apply custom CSS for dark theme and neon colors
+    THEME_COLOR = config.THEME_COLOR
     st.markdown(f"""
     <style>
     .stApp {{
@@ -33,17 +32,15 @@ else:
         background-color: {THEME_COLOR};
         color: #ffffff;
     }}
-    .stButton.remove-bet>button {{
-        background-color: #ff4b4b;  /* Red for Remove Bet */
-        color: #ffffff;
+    .bet-card {{
+        border: 1px solid #444;
+        padding: 10px;
+        margin-bottom: 5px;
+        background-color: #2e2e2e;
     }}
-    .stButton.edit-bet>button {{
-        background-color: #1e90ff;  /* Blue for Edit Bet */
-        color: #ffffff;
-    }}
-    .stButton.finalize-bet>button {{
-        background-color: #32cd32;  /* Green for Finalize Bet */
-        color: #ffffff;
+    .bet-card > span {{
+        font-size: 20px;
+        font-weight: bold;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -63,123 +60,62 @@ else:
     # Call the initialization function
     initialize_session_state()
 
-    # Simulated Weeks and Teams for Mock Data
-    mock_weeks = {
-        "Week 5": {
-            "Buccaneers vs Dolphins": {"home_team": "Buccaneers", "away_team": "Dolphins"},
-            "Panthers vs Falcons": {"home_team": "Panthers", "away_team": "Falcons"},
-        },
-        "Week 6": {
-            "Packers vs Bears": {"home_team": "Packers", "away_team": "Bears"},
-            "Raiders vs Broncos": {"home_team": "Raiders", "away_team": "Broncos"},
-        }
-    }
-
-    # Function to Simulate Matchups by Week
-    def get_matchups_by_week(selected_week):
-        return mock_weeks.get(selected_week, {})
-
-    # User Input Function
-    def get_user_input():
-        # Select Week
-        selected_week = st.selectbox("Select Week", list(mock_weeks.keys()))
-
-        # Fetch matchups dynamically based on selected week
-        matchups_data = get_matchups_by_week(selected_week)
-        matchup_options = list(matchups_data.keys())
-
-        if not matchup_options:
-            st.error("No matchups available at the moment.")
-            return None, None
-
-        selected_matchup = st.selectbox('Select Team', matchup_options)
-
-        # Bet Type Selection (Spread or Total)
-        bet_type = st.radio('Select Bet Type', ['Spread', 'Total'], horizontal=True)
-
-        bet_details = {'type': bet_type}
-
-        # Input Bet Value
-        if bet_type == 'Spread':
-            selected_team = st.selectbox('Select Team', [
-                matchups_data[selected_matchup]['home_team'],
-                matchups_data[selected_matchup]['away_team']
-            ])
-            selected_value = st.number_input('Enter Spread Value', value=0.0, min_value=-100.0, max_value=100.0, step=0.5)
-            bet_details['value'] = selected_value
-            bet_details['team'] = selected_team
+    # Function to determine bet status and display accordingly
+    def get_bet_status_color(bet_status):
+        if bet_status in ["Currently Winning", "Won"]:
+            return "green", "✅"
+        elif bet_status in ["Currently Losing", "Lost"]:
+            return "red", "❌"
+        elif bet_status == "Currently Tied":
+            return "yellow", "⚖️"
         else:
-            selected_value = st.number_input('Enter Total Value (Over/Under)', value=0.0, min_value=0.0, max_value=100.0, step=0.5)
-            over_under_choice = st.selectbox('Over or Under', ['Over', 'Under'])
-            bet_details['value'] = selected_value
-            bet_details['over_under'] = over_under_choice
-
-        return selected_matchup, bet_details
-
-    # Function to Add Bet to Draft
-    def add_bet_to_draft(selected_matchup, bet_details):
-        st.session_state.draft_ticket['matchups'].append(selected_matchup)
-        st.session_state.draft_ticket['bets'].append(bet_details)
-
-    # Function to Finalize a Ticket
-    def finalize_ticket():
-        num_bets = len(st.session_state.draft_ticket['bets'])
-        if 3 <= num_bets <= 10:
-            ticket_id = st.session_state.ticket_counter
-            st.session_state.ticket_counter += 1
-            new_ticket = Ticket(ticket_id, st.session_state.draft_ticket['matchups'], st.session_state.draft_ticket['bets'])
-            new_ticket.validate()
-            st.session_state.tickets.append(new_ticket)
-            st.session_state.draft_ticket = {'matchups': [], 'bets': []}
-            st.success(f"Ticket {ticket_id} finalized!")
-        else:
-            st.error("A ticket must have between 3 and 10 bets.")
-
-    # UI Elements and Logic
-    st.title("🏈 Parlay Check")
-
-    selected_matchup, bet_details = get_user_input()
-
-    # Add Bet Button
-    if st.button("Add Bet"):
-        if selected_matchup and bet_details:
-            add_bet_to_draft(selected_matchup, bet_details)
-            st.success("Bet added to draft ticket!")
-
-    # Display Draft Ticket
-    st.subheader("Draft Ticket")
-    if st.session_state.draft_ticket['bets']:
-        for idx, (matchup, bet) in enumerate(zip(st.session_state.draft_ticket['matchups'], st.session_state.draft_ticket['bets'])):
-            st.write(f"**Bet #{idx + 1}:** {matchup} - {bet['type']} {bet['value']}")
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("Edit Bet", key=f"edit_{idx}"):
-                    st.session_state.editing_bet_index = idx
-                    st.rerun()
-            with col2:
-                if st.button("Remove Bet", key=f"remove_{idx}"):
-                    st.session_state.draft_ticket['matchups'].pop(idx)
-                    st.session_state.draft_ticket['bets'].pop(idx)
-                    st.rerun()
-    else:
-        st.write("No bets in draft ticket.")
-
-    # Finalize Ticket Button
-    if st.button("Finalize Ticket", key="finalize"):
-        finalize_ticket()
-
-    st.info("Note: Finalized tickets cannot be edited. If you need to make changes, please remove the ticket and create a new one.")
+            return "gray", "⏳"
 
     # Display Finalized Tickets
     st.subheader("Your Tickets")
     if st.session_state.tickets:
         for idx, ticket in enumerate(st.session_state.tickets):
-            st.markdown(f"## 🎟️ Ticket {ticket.ticket_id}")
+            st.markdown(f"## 🎟️ PARLAY CARD #{ticket.ticket_id}")
             for i, (matchup, bet) in enumerate(zip(ticket.matchups, ticket.bets)):
-                bet_info = f"**Bet #{i + 1}:** {matchup} - {bet['type']} {bet['value']}"
+                bet_type = bet['type']
+                selected_team = bet.get('team')
+                bet_value = bet['value']
 
-                # Prepare status, score, and delta for bet
-                st.write(bet_info)
+                # Fetch game score
+                game_score = api_client.get_scores().get(matchup, {})
+                home_team = game_score.get('home_team')
+                away_team = game_score.get('away_team')
+                home_score = game_score.get('home_score')
+                away_score = game_score.get('away_score')
+                bet_status = bet.get('status', 'Game Not Started')
+
+                # Set colors based on status
+                color, icon = get_bet_status_color(bet_status)
+
+                if bet_type == "Spread":
+                    # Spread bet logic
+                    delta = (home_score + float(bet_value)) - away_score if selected_team == home_team else (away_score + float(bet_value)) - home_score
+                    opponent_team = away_team if selected_team == home_team else home_team
+                    st.markdown(f"""
+                    <div class="bet-card" style="color:{color}">
+                        {icon} {selected_team} {bet_value}  |  Score: ({home_score} + {bet_value}) vs {away_score} {opponent_team}  |  Delta: {delta:+.1f}  |  Status: {bet_status}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                elif bet_type == "Total":
+                    # Over/Under bet logic
+                    total_score = home_score + away_score if home_score is not None and away_score is not None else 0
+                    delta = total_score - float(bet_value)
+                    st.markdown(f"""
+                    <div class="bet-card" style="color:{color}">
+                        {icon} {selected_team} {bet_value}  |  Total: ({home_score} + {away_score})  |  Delta: {delta:+.1f}  |  Status: {bet_status}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            if st.button("Remove Ticket", key=f"remove_ticket_{ticket.ticket_id}"):
+                st.session_state.tickets.pop(idx)
+                st.success(f"Ticket {ticket.ticket_id} removed.")
+                st.experimental_rerun()
     else:
         st.write("No finalized tickets.")
 
