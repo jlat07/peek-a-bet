@@ -1,8 +1,8 @@
 import streamlit as st
 from utils.auth import authenticate, logout
-from utils.database import fetch_matchups, fetch_scores, save_finalized_ticket  # Replace API calls with DB functions
 import utils.data_and_config as config
 from utils.ticket import Ticket
+from utils.database import fetch_matchups, fetch_scores, save_finalized_ticket
 
 # Set page configuration for dark theme
 st.set_page_config(page_title="Parlay Check", page_icon="🏈", layout="wide")
@@ -114,4 +114,4 @@ else:
             scores = fetch_scores()  # Fetch the latest scores from the database
             for ticket in tickets:
                 ticket.compute_outcome(scores)
-            st.experimental_rerun()
+            st.rerun()()
